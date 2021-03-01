@@ -20,7 +20,8 @@ in the pda_lib folder.
 ## Example
 
 Assume, we have two random variables: A resistor value r and a capacitance value c. Both are independently normal distributed. 
-Furthermore, we will use a second order arithmetic. Then, we initialize a Probability Distribution Arithmetic (PDA) by:
+As a choice concerning the accuracy of our calculations, we will use a second order arithmetic. 
+As the first step in our program, we will initialize a Probability Distribution Arithmetic (PDA) by:
 ```
 PDA pda(2,2);  // order: 2, : independent variables: 2
 ```
