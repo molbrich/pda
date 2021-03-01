@@ -20,7 +20,7 @@ in the pda_lib folder.
 ## Example
 
 Assume, we have two random variables: A resistor value r and a capacitance value c. Both are independently normal distributed. 
-Furthermore, we will use a second order arithmetic. Then we initialize a Probability Distribution Arithmetic (PDA) by:
+Furthermore, we will use a second order arithmetic. Then, we initialize a Probability Distribution Arithmetic (PDA) by:
 ```
 PDA pda(2,2);  // order: 2, : independent variables: 2
 ```
@@ -58,6 +58,8 @@ E.g., we can determine the mean and variance of t by
 std::cout << "Mean of t: " << t.getMean() << std::endl;
 std::cout << "Variance of t: " << t.getVariance() << std::endl;
 ```
+
+Please have a look at the hello-world.cpp program in examples/hello-world as a running example.
 
 ## Publications
 * M. Olbrich: Extended Probability Distribution Arithmetic. ICECOCS 2020. [DOI](https://doi.org/10.1109/ICECOCS50124.2020.9314534)
