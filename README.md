@@ -45,7 +45,7 @@ PDV c(pda, 0.01); // Mean of c is 0.01
 and add the distributed part to them:
 ```
 r.setDeltaCoeff(0, 50);   // set deviation of r to 50 (using Delta_0)
-c.setDeltaCoeff(1, 0.01); // set deviation of c to 0.01 (using Delta_1)
+c.setDeltaCoeff(1, 0.001); // set deviation of c to 0.01 (using Delta_1)
 ```
 Then, we can calculate the time t as the product of r and c:
 ```
