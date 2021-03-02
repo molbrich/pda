@@ -125,11 +125,14 @@ namespace Pda {
         friend PDV sqrt(const PDV&);
         friend PDV isqrt(const PDV&);
         friend PDV logexp(const PDV&);
-        friend PDV atan(const PDV&);
-        friend PDV tanh(const PDV&);
         friend PDV inv(const PDV&);
         friend PDV sin(const PDV&);
+        friend PDV asin(const PDV&);
         friend PDV cos(const PDV&);
+        friend PDV acos(const PDV&);
+        friend PDV tan(const PDV&);
+        friend PDV atan(const PDV&);
+        friend PDV tanh(const PDV&);
         friend PDV pow(const PDV&,
                        const PDV&);
         friend PDV pow(const PDV&, pdaValueType);

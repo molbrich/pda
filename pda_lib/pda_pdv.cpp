@@ -693,7 +693,7 @@ namespace Pda {
 /**
  * Inverse of square root
  * @param x Argument
- * @returns Square root of x.
+ * @returns Inverse square root of x.
  */
     PDV isqrt(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
@@ -728,46 +728,6 @@ namespace Pda {
         aDerivatives[2] = fx - fx2;
         aDerivatives[3] = fx - 3 * fx2 + 2 * fx3;
         aDerivatives[4] = fx - 7 * fx2 + 12 * fx3 - 6 * fx4;
-        return x.unaryOperation(aDerivatives);
-    }
-
-/**
- * Computes arcus tangens
- * @param x Argument
- * @returns Result.
- */
-    PDV atan(const PDV& x){
-        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
-        pdaValueType xNom = x.getNom();
-        pdaValueType d = 1 + xNom * xNom;
-        pdaValueType d2 = d * d;
-        pdaValueType d3 = d2 * d;
-        pdaValueType d4 = d3 * d;
-        aDerivatives[0] = std::atan(xNom);
-        aDerivatives[1] = 1 / d;
-        aDerivatives[2] = -2 * xNom / d2;
-        aDerivatives[3] = 8 * xNom * xNom / d3 - 2 / d2;
-        aDerivatives[4] = -48 * xNom * xNom * xNom / d4 + 24 * xNom / d3;
-        return x.unaryOperation(aDerivatives);
-    }
-
-/**
- * Computes tangens hyperbolicus
- * @param x Argument
- * @returns Result.
- */
-    PDV tanh(const PDV& x){
-        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
-        pdaValueType t = std::tanh(x.getNom());
-        pdaValueType t2 = t * t;
-        pdaValueType t3 = t2 * t;
-        pdaValueType et = 1 - t2;
-        pdaValueType et2 = et * et;
-        aDerivatives[0] = t;
-        aDerivatives[1] = 1 - t2;
-        aDerivatives[2] = -2 * t * et;
-        aDerivatives[3] = -2 * et2 + 4 * t2 * et;
-        aDerivatives[4] = 16 * et2 * t - 8 * t3 * et;
         return x.unaryOperation(aDerivatives);
     }
 
@@ -809,6 +769,34 @@ namespace Pda {
     }
 
 /**
+ * Computes arcus sine
+ * @param x Argument
+ * @returns asin(x).
+ */
+    PDV asin(const PDV& x){
+        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
+        pdaValueType xn = x.getNom();
+        pdaValueType xn2 = xn*xn;
+        aDerivatives[0] = std::asin(xn);
+        if (x.m_pda.getOrder() <= 1) {
+            pdaValueType sqrt1 = std::sqrt(1-xn2);
+            aDerivatives[1] = 1/sqrt1;
+            if (x.m_pda.getOrder() <= 2) {
+                pdaValueType xn4 = xn2*xn2;
+                aDerivatives[2] = xn*sqrt1/(xn4-2*xn2+1);
+                if (x.m_pda.getOrder() <= 3) {
+                    pdaValueType xn6 = xn4*xn2;
+                    aDerivatives[3] = -(2*xn2+1)*sqrt1/(xn6-3*xn4+3*xn2-1);
+                    if (x.m_pda.getOrder() <= 4) {
+                        aDerivatives[4] = xn*(6*xn2+9)*sqrt1/(xn4*xn4-4*xn6+6*xn4-4*xn2+1);
+                    }
+                }
+            }
+        }
+        return x.unaryOperation(aDerivatives);
+    }
+
+/**
  * Computes cosine
  * @param x Argument
  * @returns cos(x).
@@ -830,6 +818,84 @@ namespace Pda {
                 }
             }
         }
+        return x.unaryOperation(aDerivatives);
+    }
+
+/**
+ * Computes arcus cosine
+ * @param x Argument
+ * @returns acos(x).
+ */
+    PDV acos(const PDV& x){
+        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
+        pdaValueType xn = x.getNom();
+        pdaValueType xn2 = xn*xn;
+        aDerivatives[0] = std::acos(xn);
+        if (x.m_pda.getOrder() <= 1) {
+            pdaValueType sqrt1 = std::sqrt(1-xn2);
+            aDerivatives[1] = -1/sqrt1;
+            if (x.m_pda.getOrder() <= 2) {
+                pdaValueType xn4 = xn2*xn2;
+                aDerivatives[2] = -xn*sqrt1/(xn4-2*xn2+1);
+                if (x.m_pda.getOrder() <= 3) {
+                    pdaValueType xn6 = xn4*xn2;
+                    aDerivatives[3] = (2*xn2+1)*sqrt1/(xn6-3*xn4+3*xn2-1);
+                    if (x.m_pda.getOrder() <= 4) {
+                        aDerivatives[4] = -xn*(6*xn2+9)*sqrt1/(xn4*xn4-4*xn6+6*xn4-4*xn2+1);
+                    }
+                }
+            }
+        }
+        return x.unaryOperation(aDerivatives);
+    }
+
+
+    /**
+ * Computes tangens
+ * @param x Argument
+ * @returns tan(x).
+ */
+    PDV tan(const PDV& x) {
+        return sin(x) / cos(x);
+    }
+
+/**
+ * Computes arcus tangens
+ * @param x Argument
+ * @returns Result.
+ */
+    PDV atan(const PDV& x){
+        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
+        pdaValueType xNom = x.getNom();
+        pdaValueType d = 1 + xNom * xNom;
+        pdaValueType d2 = d * d;
+        pdaValueType d3 = d2 * d;
+        pdaValueType d4 = d3 * d;
+        aDerivatives[0] = std::atan(xNom);
+        aDerivatives[1] = 1 / d;
+        aDerivatives[2] = -2 * xNom / d2;
+        aDerivatives[3] = 8 * xNom * xNom / d3 - 2 / d2;
+        aDerivatives[4] = -48 * xNom * xNom * xNom / d4 + 24 * xNom / d3;
+        return x.unaryOperation(aDerivatives);
+    }
+
+/**
+ * Computes tangens hyperbolicus
+ * @param x Argument
+ * @returns Result.
+ */
+    PDV tanh(const PDV& x){
+        static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
+        pdaValueType t = std::tanh(x.getNom());
+        pdaValueType t2 = t * t;
+        pdaValueType t3 = t2 * t;
+        pdaValueType et = 1 - t2;
+        pdaValueType et2 = et * et;
+        aDerivatives[0] = t;
+        aDerivatives[1] = 1 - t2;
+        aDerivatives[2] = -2 * t * et;
+        aDerivatives[3] = -2 * et2 + 4 * t2 * et;
+        aDerivatives[4] = 16 * et2 * t - 8 * t3 * et;
         return x.unaryOperation(aDerivatives);
     }
 

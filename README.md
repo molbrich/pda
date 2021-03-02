@@ -40,8 +40,8 @@ c = 0.01 + 0.001 \Delta_1
 with Delta_1 being the second BRV.
 In C++ we define two Probability Distribution Variables (PDVs) for r and c:
 ```
-PDV r(pda, 200); // Mean of r is 200
-PDV c(pda, 0.01); // Mean of c is 0.01
+PDV r(pda, 200); // Nominal value of r is 200
+PDV c(pda, 0.01); // Nominal value of c is 0.01
 ```
 and add the distributed part to them:
 ```
@@ -60,7 +60,7 @@ std::cout << "Mean of t: " << t.getMean() << std::endl;
 std::cout << "Variance of t: " << t.getVariance() << std::endl;
 ```
 
-Please have a look at the hello-world.cpp program in examples/hello-world as a running example.
+Please have a look at the hello-world.cpp program in examples/hello-world as an other running example.
 
 ## Publications
 * M. Olbrich: Extended Probability Distribution Arithmetic. ICECOCS 2020. [DOI](https://doi.org/10.1109/ICECOCS50124.2020.9314534)
