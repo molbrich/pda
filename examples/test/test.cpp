@@ -7,8 +7,8 @@
 #include "pda_matrix.h"
 #include "pda_util.h"
 #include <iostream>
-#include <assert.h>
-#include <math.h>
+#include <cassert>
+#include <cmath>
 
 using namespace Pda;
 
@@ -108,76 +108,60 @@ void checkPowersIterator(Util::PowersIterator& pi, long nExpectedCombinationCoun
     }
 }
 
-void da_checks() {
-    PDA pda(4,1);
-    pda.setDeltaAsNormal(0,2);
-    PDV x(pda, 2);
-    x.setDeltaCoeff(0, 1);
-    x = log(x);
-    //std::cout << x << std::endl;
-
-    const pdaValueType epsilon = 1E-9;
-
-    /*
-    std::cout << "Delta symbol moments:" << std::endl;
-    PDV::dumpMoments(cout);
-    std::cout << std::endl;
-    */
-
-    // Powers Iterator
+void testPowersIterator() {
     {
-        {
-            PDA pda(0, 0);
-            Util::PowersIterator pi(pda, 2);
-            checkPowersIterator(pi, 1);
-        }
-        {
-            PDA pda(2, 10);
-            Util::PowersIterator pi(pda, 2);
-            checkPowersIterator(pi, 4356);
-        }
-        {
-            PDA pda(2, 10);
-            Util::PowersIterator pi(pda, 2, 1);
-            checkPowersIterator(pi, 2*10+1);
-        }
-        {
-            PDA pda(2, 10);
-            Util::PowersIterator pi(pda, 2, 2);
-            checkPowersIterator(pi, Util::getBinCoeff(2*10,2)+2*10+2*10+1);
-        }
-        {
-            PDA pda(4, 1);
-            Util::PowersIterator pi(pda, 3);
-            checkPowersIterator(pi);
-        }
-        {
-            PDA pda(4, 1);
-            Util::PowersIterator pi(pda, 4);
-            checkPowersIterator(pi);
-        }
-        {
-            PDA pda(2, 2);
-            Util::PowersIterator pi(pda, 1, 2, 2);
-            checkPowersIterator(pi, 6);
-        }
-        {
-            PDA pda(2, 3);
-            Util::PowersIterator pi(pda, 2, 2, 4);
-            checkPowersIterator(pi, 28);
-        }
-        {
-            PDA pda(3, 2);
-            Util::PowersIterator pi(pda, 3);
-            checkPowersIterator(pi);
-        }
-        {
-            PDA pda(4, 1);
-            Util::PowersIterator pi(pda, 4);
-            checkPowersIterator(pi);
-        }
+        PDA pda(0, 0);
+        Util::PowersIterator pi(pda, 2);
+        checkPowersIterator(pi, 1);
     }
+    {
+        PDA pda(2, 10);
+        Util::PowersIterator pi(pda, 2);
+        checkPowersIterator(pi, 4356);
+    }
+    {
+        PDA pda(2, 10);
+        Util::PowersIterator pi(pda, 2, 1);
+        checkPowersIterator(pi, 2*10+1);
+    }
+    {
+        PDA pda(2, 10);
+        Util::PowersIterator pi(pda, 2, 2);
+        checkPowersIterator(pi, Util::getBinCoeff(2*10,2)+2*10+2*10+1);
+    }
+    {
+        PDA pda(4, 1);
+        Util::PowersIterator pi(pda, 3);
+        checkPowersIterator(pi);
+    }
+    {
+        PDA pda(4, 1);
+        Util::PowersIterator pi(pda, 4);
+        checkPowersIterator(pi);
+    }
+    {
+        PDA pda(2, 2);
+        Util::PowersIterator pi(pda, 1, 2, 2);
+        checkPowersIterator(pi, 6);
+    }
+    {
+        PDA pda(2, 3);
+        Util::PowersIterator pi(pda, 2, 2, 4);
+        checkPowersIterator(pi, 28);
+    }
+    {
+        PDA pda(3, 2);
+        Util::PowersIterator pi(pda, 3);
+        checkPowersIterator(pi);
+    }
+    {
+        PDA pda(4, 1);
+        Util::PowersIterator pi(pda, 4);
+        checkPowersIterator(pi);
+    }
+}
 
+void testFundamentals() {
     // Variable definition and init:
     {
         PDA pda(1,2);
@@ -197,100 +181,129 @@ void da_checks() {
         assert(x!=z);
         z = x;
         assert(x==z);
-    }
 
-    {
-        PDV y{pda,4};
-        assert(y.getNom() == 4);
+        PDV a{pda,4};
+        assert(a.getNom() == 4);
     }
-    // Comparison
-    {
-        PDV x{pda, 3};
-        PDV y{pda,2};
-        PDV z{pda,2};
+    for (size_t nOrder = 0; nOrder<=4; ++nOrder) {
+        PDA pda(nOrder, 1);
+        // Comparison
+        {
+            PDV x{pda, 3};
+            PDV y{pda, 2};
+            PDV z{pda, 2};
 
-        assert(x > y);
-        assert(x >= y);
-        assert(z <= y);
-        assert(z == y);
-        assert(x != y);
-        assert(z == y);
-    }
-    // Simple +
-    {
-        PDV x{pda, 3};
-        PDV y{pda, 2};
-        assert(y.getNom() == 2);
-        x = x+y;
-        assert(x.getNom() == 5);
-        assert(y.getNom() == 2);
-        x = y+4;
-        assert(x.getNom() == 6);
-        assert(y.getNom() == 2);
-        x = 4+y;
-        assert(x.getNom() == 6);
-        assert(y.getNom() == 2);
-        PDV z(x+y);
-        assert(x+y+z == y+z+x);
-        assert(y+z+x == z+y+x);
-        assert(y+z+x == z+(y+x));
-        assert((x+y)+(x+z) == x+y+x+z);
-    }
-    // Simple -
-    {
-        PDV x{pda, 3};
-        PDV y{pda, 2};
+            assert(x > y);
+            assert(y < x);
+            assert(x >= y);
+            assert(z <= y);
+            assert(z == y);
+            assert(!(x == y));
+            assert(x != y);
+            assert(!(z != y));
+            assert(z == y);
+        }
+        // Simple +
+        {
+            PDV x{pda, 3};
+            PDV y{pda, 2};
+            assert(y.getNom() == 2);
+            x = x + y;
+            assert(x.getNom() == 5);
+            assert(y.getNom() == 2);
+            x = y + 4;
+            assert(x.getNom() == 6);
+            assert(y.getNom() == 2);
+            x = 4 + y;
+            assert(x.getNom() == 6);
+            assert(y.getNom() == 2);
+            PDV z(x + y);
+            assert(x + y + z == y + z + x);
+            assert(y + z + x == z + y + x);
+            assert(y + z + x == z + (y + x));
+            assert(2 + x + y == 2 + (x + y));
+            assert((x + y) + (x + z) == x + y + x + z);
+        }
+        // Simple -
+        {
+            PDV x{pda, 3};
+            PDV y{pda, 2};
 
-        assert(y.getNom() == 2);
-        x = x-y;
-        assert(x.getNom() == 1);
-        assert(y.getNom() == 2);
-        x = y-4;
-        assert(x.getNom() == -2);
-        assert(y.getNom() == 2);
-        x = 4-y;
-        assert(x.getNom() == 2);
-        assert(y.getNom() == 2);
-        PDV z(pda);
-        z = y-4;
-        assert(z.getNom() == -2);
-        x = -x;
-        x = 1.0 - (x+x);
-        assert(x-(y-z) == x-y+z);
-        assert((x-y)-z == x-y-z);
-        assert((x-y)-(x-z) == x-y-x+z);
-    }
-    // Calculating assignments:
-    {
-        PDV x(pda, 3);
-        x.setDeltaCoeff(0,2);
+            assert(y.getNom() == 2);
+            x = x - y;
+            assert(x.getNom() == 1);
+            assert(y.getNom() == 2);
+            x = y - 4;
+            assert(x.getNom() == -2);
+            assert(y.getNom() == 2);
+            x = 4 - y;
+            assert(x.getNom() == 2);
+            assert(y.getNom() == 2);
+            PDV z(pda);
+            z = y - 4;
+            assert(z.getNom() == -2);
+            x = -x;
+            x = 1.0 - (x + x);
+            assert(x - (y - z) == x - y + z);
+            assert((x - y) - z == x - y - z);
+            assert((x - y) - (x - z) == x - y - x + z);
+        }
+        // Simple *
+        {
+            PDV x{pda, 3};
+            PDV y{pda, 2};
 
-        {
-            PDV y(x);
-            assert(x==y);
-            y += x;
-            assert(2*x == y);
+            assert(y.getNom() == 2);
+            x = x * y;
+            assert(x.getNom() == 6);
+            x = y * 4;
+            assert(x.getNom() == 8);
+            x = 4 * y;
+            assert(x.getNom() == 8);
+            PDV z(pda);
+            z = y * 4;
+            assert(z.getNom() == 8);
+            assert(x * y * z == y * z * x);
+            assert(y * z * x == z * y * x);
+            assert(y * z * x == z * (y * x));
+            assert(2 * x * y == (x * y) * 2);
+            assert((x * y) * (x * z) == x * y * x * z);
         }
+        // Calculating assignments:
         {
-            PDV y(x);
-            y -= x;
-            assert(y == PDV(pda, 0));
-        }
-        {
-            PDV y(x);
-            y *= x;
-            assert(x*x == y);
-        }
-        {
-            PDV y(x);
-            //std::cout << x << std::endl;
-            //std::cout << y << std::endl;
-            y /= x;
-            //std::cout << y << std::endl;
-            assert(y == PDV(pda, 1));
+            PDV x(pda, 3);
+            x.setDeltaCoeff(0, 2);
+
+            {
+                PDV y(x);
+                assert(x == y);
+                y += x;
+                assert(2 * x == y);
+                y += 3;
+                assert(y == 2*x + 3);
+            }
+            {
+                PDV y(x);
+                y -= x;
+                assert(y == PDV(pda, 0));
+                y -= 3;
+                assert(y == PDV(pda, -3));
+            }
+            {
+                PDV y(x);
+                y *= x;
+                assert(x * x == y);
+                y /= x;
+                assert(x == y);
+                y *= 3;
+                assert(3*x == y);
+                y /= 3;
+                assert(x == y);
+            }
         }
     }
     {
+        PDA pda(4,1);
         pda.setDeltaAsNormal(0,2);
         PDV x(pda);
         x.setNom(3);
@@ -298,6 +311,11 @@ void da_checks() {
         assert(x.getMean() == 3);
         //assert(x.getCentralMoment(2) == 1.5);
     }
+}
+
+void testMaths() {
+    const pdaValueType epsilon = 1E-9;
+
     // Unary first order operation:
     {
         PDA pda(1, 2);
@@ -359,7 +377,7 @@ void da_checks() {
         assert (result.getCoeff(r11) == d / x0 - a * c / (x0 * x0));
     }
     {
-        PDA pda(4, 20);
+        PDA pda(4, 7);
         pdaValueType x0 = 2;
         PDV x(pda, x0);
         //std::cout << "x= " << x << std::endl;
@@ -370,232 +388,196 @@ void da_checks() {
         assert(similar(pow(sqrt(x), 2.0) , x));
     }
     // Math functions:
-    {
-        for (int nOrder = 0; nOrder <= 4; ++nOrder) {
-            PDA pda(nOrder, 3);
-            //PDV::use(pda);
+    for (int nOrder = 0; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 3);
+        //PDV::use(pda);
 
-            //std::cout<< "nOrder:" << nOrder << endl;
+        //std::cout<< "nOrder:" << nOrder << endl;
 
-            pda.setDeltaAsNormal(0,0.2);
-            pda.setDeltaAsNormal(1,0.1);
-            pda.setDeltaAsNormal(2,0.1);
+        pda.setDeltaAsNormal(0, 0.2);
+        pda.setDeltaAsNormal(1, 0.1);
+        pda.setDeltaAsNormal(2, 0.1);
 
-            PDV x{pda}, y{pda};
-            x.setNom(3);
-            x.setDeltaCoeff(0,1);
-            x.setDeltaCoeff(1,1);
-            x.setDeltaCoeff(2,1.2);
+        PDV x{pda}, y{pda};
+        x.setNom(3);
+        x.setDeltaCoeff(0, 1);
+        x.setDeltaCoeff(1, 1);
+        x.setDeltaCoeff(2, 1.2);
 
-            PDV v{2 * x + 2};
-            PDV w{v / 2 - 1};
-            assert(w==x);
+        PDV v{2 * x + 2};
+        PDV w{v / 2 - 1};
+        assert(w == x);
 
-            //std::cout<<"x   = " << x << endl<< flush;
-            y=log(x);
-            //std::cout<<"y   = " << y << endl;
-            y=exp(x);
-            //std::cout<<"x   = " << x << endl;
-            assert(similar(exp(log(x)), x));
-            y=3*x;
-            //std::cout<<"3*x = " << y << endl;
-            y=x*3;
-            //std::cout<<"x*3 = " << y << endl;
+        assert(similar(exp(log(x)), x));
+        assert(similar(log(exp(x)), x));
+        y = 3 * x;
+        x = y + 3;
+        y = y - 2.2;
+        PDV z = x * y;
+        PDV a = z * z;
+        assert (myfabs((log(exp(x))).getRawMoment(1) - x.getRawMoment(1)) < epsilon);
+        assert (myfabs((log(exp(x))).getCentralMoment(2) - x.getCentralMoment(2))
+                < epsilon);
+        assert (similar(logexp(x), log(1.0 + exp(x))));
 
-            //std::cout<<"x   = " << x << endl;
-            //std::cout<<"y   = " << y << endl;
+        assert (myfabs((sqrt(x * x)).getRawMoment(1) - x.getRawMoment(1))
+                < epsilon);
+        assert (myfabs((sqrt(x * x)).getCentralMoment(2) - x.getCentralMoment(2))
+                < epsilon);
+        assert (similar(isqrt(x), 1 / sqrt(x)));
 
-            x = y + 3;
+        assert (-(-x) == x);
 
-            //std::cout<<"x   = " << x << endl;
-            //std::cout<<"y   = " << y << endl;
+        assert (1 / x == inv(x));
+        assert (myfabs((x - inv(inv(x))).getMean()) < epsilon);
+        assert ((x - inv(inv(x))).getNom() == 0);
 
-            y = y -2.2;
+        assert ((x * inv(x)).getMean() == 1);
+        assert ((x * inv(x)).getNom() == 1);
 
-            //std::cout<<"x   = " << x << endl;
-            //std::cout<<"y   = " << y << endl;
-            PDV z=x*y;
-            //std::cout<<"z=x*y = " << z << endl;
-            //std::cout<<"x*z = " << x*z << endl;
-            PDV a=z*z;
-            //std::cout<<"a=z*z = " << a << endl;
-            //std::cout<<"x*a = " << x*a << endl;
-            //std::cout<<"x*z*z = " << x*z*z << endl;
+        assert ((x ^ 2.0) == pow(x, 2.0));
+        assert ((2.0 ^ x) == pow(PDV{pda, 2.0}, x));
+        assert ((x ^ y) == pow(x, y));
+        assert (myfabs(((x ^ 2) - x * x).getRawMoment(1)) < epsilon);
+        assert (myfabs(((x ^ 2) - x * x).getCentralMoment(2)) < epsilon);
 
-            //std::cout <<"x   = " << x << std::endl;
-            //std::cout<<"E[x] = " << x.getRawMoment(1) << endl;
-            //std::cout<<"x*x = " << x*x << endl;
-            //std::cout<<"N[x*x] = " << (x*x).getNom() << endl;
-            //std::cout<<"E[x*x] = " << (x*x).getRawMoment(1) << endl;
-            //std::cout<<"V[x*x] = " << (x*x).getCentralMoment(2) << endl;
-
-            //std::cout<<"log(exp(x)) = " << log(exp(x)) << endl << endl;
-            //std::cout<<"E[log(exp(x))] = " << (log(exp(x))).getRawMoment(1) << endl << endl;
-            //std::cout<<"(log(exp(x))).getRawMoment(1)-x.getRawMoment(1)=" << (log(exp(x))).getRawMoment(1)-x.getRawMoment(1) << endl;
-            assert (myfabs((log(exp(x))).getRawMoment(1)-x.getRawMoment(1)) < epsilon);
-            assert (myfabs((log(exp(x))).getCentralMoment(2)-x.getCentralMoment(2))
-                    < epsilon);
-
-            //std::cout<<"sqrt(x*x) = " << sqrt(x*x) << endl << endl;
-            //std::cout<<"E[sqrt(x*x)] = " << (sqrt(x*x)).getRawMoment(1) << endl << endl;
-            assert (myfabs((sqrt(x*x)).getRawMoment(1)-x.getRawMoment(1))
-                    < epsilon);
-            assert (myfabs((sqrt(x*x)).getCentralMoment(2)-x.getCentralMoment(2))
-                    < epsilon);
-
-            //std::cout<<"-x = " << -x << endl << endl;
-            assert (-(-x)==x);
-
-            //std::cout<< "1/x = " << 1/x << endl << endl;
-            //std::cout<< "inv(x) = " << inv(x) << endl << endl;
-            //std::cout<< "1/x-inv(x) = " << 1/x-inv(x) << endl << endl;
-            //std::cout<< "inv(inv(x)) = " << inv(inv(x)) << endl << endl;
-            //std::cout<< "x-inv(inv(x)) = " << x-inv(inv(x)) << endl << endl;
-            assert (1/x == inv(x));
-            //std::cout<< "(x-inv(inv(x))).getMean()" << (x-inv(inv(x))).getMean() << endl;
-            assert (myfabs((x-inv(inv(x))).getMean()) < epsilon);
-            assert ((x-inv(inv(x))).getNom() == 0);
-
-            //std::cout <<"x*inv(x) = " << x*inv(x) << std::endl << std::endl;
-            assert ((x*inv(x)).getMean() == 1);
-            assert ((x*inv(x)).getNom() == 1);
-
-            //std::cout<<"x^2.0 = " << (x^2.0) << endl << endl;
-            //std::cout<<"pow(x,2.0) = " << pow(x,2.0) << endl << endl;
-            assert ((x^2.0) == pow(x,2.0));
-            assert ((2.0^x) == pow(PDV{pda, 2.0},x));
-            assert ((x^y) == pow(x,y));
-            //std::cout<<"x^2 = " << (x^2) << endl << endl;
-            //std::cout<<"x^2.0 = " << (x^2.0) << endl << endl;
-            //std::cout<<"x*x = " << x*x << endl << endl;
-            //std::cout<<"x^2-x*x = " << (x^2)-x*x << endl << endl;
-            assert (myfabs(((x^2)-x*x).getRawMoment(1)) < epsilon);
-            assert (myfabs(((x^2)-x*x).getCentralMoment(2)) < epsilon);
-
-            // trigonometry:
-            //assert (myfabs(sin(x).getMean()-sin(x)) < epsilon);
-        }
+        // trigonometry:
+        x.setNom(0.7);
+        //std::cout << "x=" << x << std::endl;
+        //std::cout << "asin(sin(x))=" << asin(sin(x)) << std::endl;
+        assert(x.similar(asin(sin(x)), 1e-7));
+        //std::cout << "x=" << x << std::endl;
+        //std::cout << "acos(cos(x))=" << acos(cos(x)) << std::endl;
+        assert(x.similar(acos(cos(x)), 1e-7));
+        assert(x.similar(atan(tan(x)), 1e-7));
     }
+}
+
+void testMoments() {
+    const pdaValueType epsilon = 1E-9;
+
     // FullMoments:
     {
+        PDA pda(4, 1);
+        PDV x(pda,0);
+        x.setDeltaCoeff(0, 1);
+        auto rawMoments = x.getRawMoments(4);
+        assert(rawMoments[0] == 1);
+        auto centralMoments = x.getCentralMoments(4);
+        assert(centralMoments[0] == 1);
+    }
+    for (size_t nOrder = 0; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 2);
+        //std::cout << "nOrder:" << nOrder << std::endl;
+
+        PDV x{pda, 1};
+        x.setDeltaCoeff(0, 1);
+        x.setDeltaCoeff(1, 0.5);
+        assert(x.getNom() == 1);
+        assert(x.getRawMoment(1) == 1);
+
+        assert(x.getVariance() == x.getCentralMoment(2));
+        auto centralMoments = x.getCentralMoments(4);
+        if (centralMoments[2]) {
+            //std::cout << x.getSkewness() << " " << std::flush;
+            //std::cout << x.getCentralMoment(3) / pow(x.getCentralMoment(2), 1.5) << std::endl;
+            assert(x.getSkewness() == x.getCentralMoment(3) / pow(x.getCentralMoment(2), 1.5));
+            //std::cout << x.getExcessKurtosis() << " ";
+            //std::cout << x.getCentralMoment(4) / pow(x.getCentralMoment(2), 2) - 3 << std::endl;
+            assert(myfabs(x.getExcessKurtosis() - (x.getCentralMoment(4) / pow(x.getCentralMoment(2), 2) - 3)) <
+                   epsilon);
+        }
+
+        auto cm = x.getCentralMoments(4);
+        auto rm = x.getRawMoments(4);
+        for (size_t n = 0; n <= 4; ++n) {
+            if (n == 1)
+                assert(cm[n] == x.getRawMoment(n));
+            else
+                assert(cm[n] == x.getCentralMoment(n));
+            assert(rm[n] == x.getRawMoment(n));
+        }
+        // Normal distribution
         {
-            PDA pda(4, 1);
-            PDV x(pda,0);
-            x.setDeltaCoeff(0, 1);
-            auto rawMoments = x.getRawMoments(4);
-            assert(rawMoments[0] == 1);
-            auto centralMoments = x.getCentralMoments(4);
-            assert(centralMoments[0] == 1);
+            //std::cout << "Order " << nOrder << std::endl;
+            PDA pda(nOrder, 1);
+            PDV x(pda, 0);
+            x.setDeltaCoeff(0, 1.0);
+            pda.setDeltaDistribution(0, Util::NormalDistribution(1));
+            auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
+            for (size_t i = 0; i < nOrder; ++i) {
+                //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
+                assert(m[i] == pda.getDeltaMoment(0, i));
+            }
         }
-        for (size_t nOrder = 0; nOrder <= 4; ++nOrder) {
-            PDA pda(nOrder, 2);
-            //std::cout << "nOrder:" << nOrder << std::endl;
-
-            PDV x{pda, 1};
-            x.setDeltaCoeff(0, 1);
-            x.setDeltaCoeff(1, 0.5);
-            assert(x.getNom() == 1);
-            assert(x.getRawMoment(1) == 1);
-
-            assert(x.getVariance() == x.getCentralMoment(2));
-            auto centralMoments = x.getCentralMoments(4);
-            if (centralMoments[2]) {
-                //std::cout << x.getSkewness() << " " << std::flush;
-                //std::cout << x.getCentralMoment(3) / pow(x.getCentralMoment(2), 1.5) << std::endl;
-                assert(x.getSkewness() == x.getCentralMoment(3) / pow(x.getCentralMoment(2), 1.5));
-                //std::cout << x.getExcessKurtosis() << " ";
-                //std::cout << x.getCentralMoment(4) / pow(x.getCentralMoment(2), 2) - 3 << std::endl;
-                assert(myfabs(x.getExcessKurtosis() - (x.getCentralMoment(4) / pow(x.getCentralMoment(2), 2) - 3)) <
-                       epsilon);
-            }
-
-            auto cm = x.getCentralMoments(4);
-            auto rm = x.getRawMoments(4);
-            for (size_t n = 0; n <= 4; ++n) {
-                if (n == 1)
-                    assert(cm[n] == x.getRawMoment(n));
-                else
-                    assert(cm[n] == x.getCentralMoment(n));
-                assert(rm[n] == x.getRawMoment(n));
-            }
-            // Normal distribution
-            {
-                //std::cout << "Order " << nOrder << std::endl;
-                PDA pda(nOrder, 1);
-                PDV x(pda, 0);
-                x.setDeltaCoeff(0, 1.0);
-                pda.setDeltaDistribution(0, Util::NormalDistribution(1));
-                auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
-                for (size_t i = 0; i < nOrder; ++i) {
-                    //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
-                    assert(m[i] == pda.getDeltaMoment(0, i));
-                }
-            }
-            // Log normal distribution
-            {
-                //std::cout << "Order " << nOrder << std::endl;
-                PDA pda(nOrder, 1);
-                PDV x(pda, 0);
-                x.setDeltaCoeff(0, 1.0);
-                pda.setDeltaDistribution(0, Util::LogNormalDistribution(1,1));
-                auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
-                for (size_t i = 1; i < nOrder; ++i) {
-                    //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
-                    assert(m[i] == pda.getDeltaMoment(0, i));
-                }
+        // Log normal distribution
+        {
+            //std::cout << "Order " << nOrder << std::endl;
+            PDA pda(nOrder, 1);
+            PDV x(pda, 0);
+            x.setDeltaCoeff(0, 1.0);
+            pda.setDeltaDistribution(0, Util::LogNormalDistribution(1,1));
+            auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
+            for (size_t i = 1; i < nOrder; ++i) {
+                //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
+                assert(m[i] == pda.getDeltaMoment(0, i));
             }
         }
     }
-    // Covariance:
-    {
-        for (size_t nOrder = 2; nOrder <= 4; ++nOrder) {
-            PDA pda(nOrder, 3);
+}
 
-            PDV x{pda, 1};
-            x.setDeltaCoeff(0, 1);
-            x.setDeltaCoeff(1, 0.5);
-            PDV y{pda, 5};
-            y.setDeltaCoeff(0, 5);
-            y.setDeltaCoeff(2, 0.3);
+void testCovariance() {
+    const pdaValueType epsilon = 1E-9;
+    for (size_t nOrder = 2; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 3);
 
-            //std::cout << "Cov(x,y)=" << Cov(x,y) << std::endl;
-            //std::cout << Var(x+y) << "=";
-            //std::cout << Var(x)+Var(y)+2*Cov(x,y) << std::endl;
-            assert(myfabs(Var(x+y) - Var(x) - Var(y) - 2*Cov(x,y)) < epsilon);
-            //std::cout << Cor(x,y)*sqrt(Var(x)*Var(y)) << "=";
-            //std::cout << Cov(x,y) << std::endl;
-            assert(myfabs(Cor(x,y)*sqrt(Var(x)*Var(y)) - Cov(x,y)) < epsilon);
-        }
+        PDV x{pda, 1};
+        x.setDeltaCoeff(0, 1);
+        x.setDeltaCoeff(1, 0.5);
+        PDV y{pda, 5};
+        y.setDeltaCoeff(0, 5);
+        y.setDeltaCoeff(2, 0.3);
+
+        //std::cout << "Cov(x,y)=" << Cov(x,y) << std::endl;
+        //std::cout << Var(x+y) << "=";
+        //std::cout << Var(x)+Var(y)+2*Cov(x,y) << std::endl;
+        assert(myfabs(Var(x+y) - Var(x) - Var(y) - 2*Cov(x,y)) < epsilon);
+        //std::cout << Cor(x,y)*sqrt(Var(x)*Var(y)) << "=";
+        //std::cout << Cov(x,y) << std::endl;
+        assert(myfabs(Cor(x,y)*sqrt(Var(x)*Var(y)) - Cov(x,y)) < epsilon);
     }
-    // Sensitivity:
-    {
-        for (int nOrder = 1; nOrder <= 4; ++nOrder) {
-            PDA pda(nOrder, 3);
+}
 
-            PDV x{pda, 1};
-            x.setDeltaCoeff(0, 1);
-            x.setDeltaCoeff(1, 0.5);
-            PDV y={pda, 5};
-            y.setDeltaCoeff(0, 5);
-            y.setDeltaCoeff(2, 0.3);
+void testSensitivity() {
+    for (int nOrder = 1; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 3);
 
-            assert(x.getSensitivity(0) == 1);
-            assert(x.getSensitivity(1) == 0.5);
+        PDV x{pda, 1};
+        x.setDeltaCoeff(0, 1);
+        x.setDeltaCoeff(1, 0.5);
+        PDV y={pda, 5};
+        y.setDeltaCoeff(0, 5);
+        y.setDeltaCoeff(2, 0.3);
 
-            assert(y.getSensitivity(0) == 5);
-            assert(y.getSensitivity(1) == 0);
-            assert(y.getSensitivity(2) == 0.3);
+        assert(x.getSensitivity(0) == 1);
+        assert(x.getSensitivity(1) == 0.5);
 
-            //std::cout << "dXY/dD0=" << (x*y).getSensitivity(0) << std::endl;
-            //std::cout << "dXY/dD1=" << (x*y).getSensitivity(1) << std::endl;
-            //std::cout << "dXY/dD2=" << (x*y).getSensitivity(2) << std::endl;
-            assert((x*y).getSensitivity(0) == 10 );
-            assert((x*y).getSensitivity(1) == 2.5);
-            assert((x*y).getSensitivity(2) == 0.3);
+        assert(y.getSensitivity(0) == 5);
+        assert(y.getSensitivity(1) == 0);
+        assert(y.getSensitivity(2) == 0.3);
 
-            //std::cout << exp(x).getSensitivity(0) << std::endl;
-        }
+        //std::cout << "dXY/dD0=" << (x*y).getSensitivity(0) << std::endl;
+        //std::cout << "dXY/dD1=" << (x*y).getSensitivity(1) << std::endl;
+        //std::cout << "dXY/dD2=" << (x*y).getSensitivity(2) << std::endl;
+        assert((x*y).getSensitivity(0) == 10 );
+        assert((x*y).getSensitivity(1) == 2.5);
+        assert((x*y).getSensitivity(2) == 0.3);
+
+        //std::cout << exp(x).getSensitivity(0) << std::endl;
     }
+}
+
+void testEquationSystems() {
     // Vector, Matrics:
     {
         for (int nOrder = 1; nOrder <= 4; ++nOrder) {
@@ -684,10 +666,10 @@ void da_checks() {
             //PDV::use(pda);
             //std::cout << "Order: " << nOrder << std::endl;
 
-            PDV xd={pda, 1};
+            PDV xd = {pda, 1};
             xd.setDeltaCoeff(0, 0.5);
             xd.setDeltaCoeff(1, 1);
-            PDV yd={pda, 4};
+            PDV yd = {pda, 4};
             yd.setDeltaCoeff(0, 5);
             yd.setDeltaCoeff(2, 0.3);
 
@@ -716,20 +698,34 @@ void da_checks() {
 
             //std::cout << std::endl;
         }
-        // Monte Carlo:
-        {
-            for (int nOrder = 1; nOrder <= 4; ++nOrder) {
-                PDA pda(nOrder, 3);
-                std::function<PDV(std::vector<PDV>)> iterateFactor = [&] (std::vector<PDV> x) -> PDV {
-                    return x[0];
-                };
-            }
-        }
     }
 }
 
-int main (void) {
-    da_checks();
+void testMonteCarloEstimations() {
+    for (int nOrder = 1; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 3);
+        PDV x(pda, 1);
+        x.setDeltaCoeff(0, 0.1);
+        x.setDeltaCoeff(1, 0.1);
+        x.setDeltaCoeff(2, 0.1);
+        auto s = x.drawSamples();
+        auto cdf = x.estimatePDF();
+        auto pdf = x.estimatePDF();
+    }
+}
+
+void tests() {
+    testPowersIterator();
+    testFundamentals();
+    testMaths();
+    testMoments();
+    testCovariance();
+    testSensitivity();
+    testEquationSystems();
+}
+
+int main () {
+    tests();
     std::cout << "Test done." << std::endl;
     return(0);
 }
