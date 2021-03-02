@@ -29,8 +29,7 @@ namespace Pda {
                 m_pda{M.m_pda},
                 m_n(M.m_n),
                 m_e(m_n, std::vector<PDV>{m_n, m_pda}) {
-            size_t nTotalSize = m_n * m_n;
-            for (size_t i = 0; i < nTotalSize; ++i)
+            for (size_t i = 0; i < m_n; ++i)
                 m_e[i] = M.m_e[i];
         }
 
