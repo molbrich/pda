@@ -159,6 +159,11 @@ namespace Pda {
         // Sensitivities:
         pdaValueType getSensitivity(size_t nDeltaNumber);
 
+        // Monte Carlo estimation:
+        std::vector<pdaValueType> drawSamples(size_t sampleCount = 100);
+        std::vector<std::pair<pdaValueType, pdaValueType>> estimateCDF(size_t pointCount = 50, size_t averagingCount = 500);
+        std::vector<std::pair<pdaValueType, pdaValueType>> estimatePDF(size_t pointCount = 50, size_t averagingCount = 2000);
+
         // Calculate covariance:
         friend pdaValueType Cov(const PDV& value1, const PDV& value2, MomentMethod method, size_t nMax);
         friend pdaValueType Cor(const PDV& value1, const PDV& value2, MomentMethod method, size_t nMax);

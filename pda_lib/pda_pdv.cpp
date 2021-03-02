@@ -6,6 +6,7 @@
 #include "pda_pda.h"
 #include "pda_pdv.h"
 #include "pda_powersiterator.h"
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -1249,7 +1250,80 @@ namespace Pda {
         return sensitivity;
     }
 
-/** 
+/**
+ * drawSamples
+ * @param sampleCount
+ * @return
+ */
+    std::vector<pdaValueType> PDV::drawSamples(size_t sampleCount) {
+        assert (m_pda.getOrder() > 0);
+        std::vector<pdaValueType> r(sampleCount);
+        std::vector<std::vector<pdaValueType>> deltaPowers(m_pda.getNumberOfDeltas(),
+                                                           std::vector<pdaValueType>(m_pda.getOrder()+1));
+        for (size_t i=0; i<sampleCount; ++i) {
+            // Draw Deltas:
+            for (size_t d=0; d<m_pda.getNumberOfDeltas(); ++d) {
+                deltaPowers[d][0] = 1.0;
+                deltaPowers[d][1] = m_pda.getDeltaDistribution(d)->drawSample();
+                for (size_t p=2; p<m_pda.getOrder()+1; ++p)
+                    deltaPowers[d][p] = deltaPowers[d][p-1] * deltaPowers[d][1];
+            }
+
+            // Evaluate PDV:
+            pdaValueType v = 0.0;
+            Util::PowersIterator pi(m_pda, 1);
+            do {
+                pdaValueType term = getCoeff(pi.getFactorsPowersSum());
+                for (size_t d = 0; d < m_pda.getNumberOfDeltas(); ++d)
+                    term *= deltaPowers[d][pi.getFactorsPowersSum()[d]];
+                v += term;
+            } while (pi.next());
+            r[i] = v;
+        }
+        std::sort(r.begin(), r.end());
+        return r;
+    }
+
+/**
+ * Returns a vector of CDF function points
+ * @param pointCount
+ * @param averagingCount
+ * @return Vector of x/CDF(x) pairs
+ */
+    std::vector<std::pair<pdaValueType, pdaValueType>> PDV::estimateCDF(size_t pointCount, size_t averagingCount) {
+        std::vector<std::pair<pdaValueType, pdaValueType>> r(pointCount, {0,0});
+        std::vector<pdaValueType> s = this->drawSamples(pointCount * averagingCount);
+        for (size_t i=0; i<pointCount; ++i) {
+            pdaValueType average = 0;
+            for (size_t j=0; j<averagingCount; ++j)
+                average += s[i*averagingCount+j];
+            average /= static_cast<pdaValueType>(averagingCount);
+            pdaValueType percentage = (static_cast<pdaValueType>(i*averagingCount) + static_cast<pdaValueType>(averagingCount)/2)
+                                      / static_cast<pdaValueType>(pointCount*averagingCount);
+            r[i] = std::make_pair(average, percentage);
+        }
+        return r;
+    }
+
+/**
+ * Returns a vector of PDF function points
+ * @param x
+ * @param pointCount
+ * @param averagingCount
+ * @return Vector of x/PDF(x) pairs
+ */
+    std::vector<std::pair<pdaValueType, pdaValueType>> PDV::estimatePDF(size_t pointCount, size_t averagingCount) {
+        std::vector<std::pair<pdaValueType, pdaValueType>> r(pointCount, {0,0});
+        auto cdf = this->estimateCDF(pointCount+1, averagingCount);
+        for (size_t i=0; i<pointCount; ++i) {
+            pdaValueType value = (cdf[i+1].first + cdf[i].first) / 2;
+            pdaValueType p = (cdf[i+1].second-cdf[i].second) / (cdf[i+1].first-cdf[i].first);
+            r[i] = std::make_pair(value, p);
+        }
+        return r;
+    }
+
+ /**
  * Determins the covariance.
  * \f[Cov(X,Y)=\langle (X-\langle X\rangle)(Y-\langle Y\rangle) \rangle\f]
  * @returns Covariance of value1 and value2
