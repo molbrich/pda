@@ -25,8 +25,7 @@ namespace Pda {
  * Postcondition: The iterator points to nominal values.
  */
         PowersIterator::PowersIterator(const PDA &pda, size_t nNumberOfFactors,
-                                       const size_t nMaxTotalPowersSum, const size_t nMaxTotalDeltaPower,
-                                       const size_t nMaxDeltaPower) :
+                                       const size_t nMaxTotalPowersSum) :
                 m_pda(pda),
                 m_nNumberOfFactors(nNumberOfFactors),
                 m_aaPowers(m_nNumberOfFactors, std::vector<size_t>(pda.getNumberOfDeltas(), 0)),
@@ -36,15 +35,8 @@ namespace Pda {
                 m_aPositions(m_nNumberOfFactors, 0),
                 m_nMaxTotalPowersSum(
                         nMaxTotalPowersSum == 0 ? nNumberOfFactors * pda.getNumberOfDeltas() * pda.getOrder()
-                                                : nMaxTotalPowersSum),
-                m_nMaxTotalDeltaPower(nMaxTotalDeltaPower == 0 ?
-                                      std::min(nNumberOfFactors * pda.getOrder(), m_nMaxTotalPowersSum) :
-                                      std::min(nMaxTotalDeltaPower, m_nMaxTotalPowersSum)),
-                m_nMaxDeltaPower(nMaxDeltaPower == 0 ?
-                                 std::min(pda.getOrder(), m_nMaxTotalDeltaPower) :
-                                 std::min(nMaxDeltaPower, m_nMaxTotalDeltaPower)) {
-            assert(m_nMaxDeltaPower <= pda.getOrder());
-            assert(m_nMaxDeltaPower <= m_nMaxTotalDeltaPower);
+                                                : nMaxTotalPowersSum)
+                                 {
             assert(m_nTotalPowersSum <= m_nMaxTotalPowersSum);
             assert(nNumberOfFactors > 0);
             assert(nNumberOfFactors <= 4);
@@ -54,13 +46,11 @@ namespace Pda {
  * Go to next combination.
  */
         bool PowersIterator::next() {
-            // NOTE: m_nMaxTotalDeltaPower is not considered
             for (size_t nFactor = 0; nFactor < m_nNumberOfFactors; ++nFactor) {
                 size_t nDelta;
                 do {
                     for (nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
-                        if (m_aaPowers[nFactor][nDelta] < m_nMaxDeltaPower
-                            && m_aDeltasPowersSums[nFactor] < m_pda.getOrder()
+                        if (m_aDeltasPowersSums[nFactor] < m_pda.getOrder()
                             && m_nTotalPowersSum < m_nMaxTotalPowersSum) {
                             ++(m_aaPowers[nFactor][nDelta]);
                             ++m_aFactorsPowersSums[nDelta];
@@ -89,87 +79,6 @@ namespace Pda {
             }
             return false;
         }
-
-        void PowersIterator::iterateFactor(size_t nFactor, const std::function<void(void)> &callback) {
-            iterateDelta(0, nFactor, callback);
-            m_aPositions[nFactor] = 0;
-        }
-
-        void PowersIterator::iterateDelta(size_t nDelta, size_t nFactor, const std::function<void(void)> &callback) {
-            bool incremented;
-            do {
-                if (nDelta < m_pda.getNumberOfDeltas() - 1)
-                    iterateDelta(nDelta + 1, nFactor, callback);
-                else {
-                    m_aPositions[nFactor] = m_pda.calcCoeffPos(m_aaPowers[nFactor]);
-                    if (m_nNumberOfFactors > 0 && nFactor < m_nNumberOfFactors - 1)
-                        iterateFactor(nFactor + 1, callback);
-                    else
-                        callback();
-                }
-                incremented = false;
-                if (m_aaPowers[nFactor][nDelta] < m_nMaxDeltaPower
-                    && m_aDeltasPowersSums[nFactor] < m_pda.getOrder()
-                    && m_nTotalPowersSum < m_nMaxTotalPowersSum) {
-                    ++(m_aaPowers[nFactor][nDelta]);
-                    ++m_aFactorsPowersSums[nDelta];
-                    ++m_aDeltasPowersSums[nFactor];
-                    ++m_nTotalPowersSum;
-                    incremented = true;
-                }
-            } while (incremented);
-            // Set this Delta power to 0:
-            m_aFactorsPowersSums[nDelta] -= m_aaPowers[nFactor][nDelta];
-            m_aDeltasPowersSums[nFactor] -= m_aaPowers[nFactor][nDelta];
-            m_nTotalPowersSum -= m_aaPowers[nFactor][nDelta];
-            m_aaPowers[nFactor][nDelta] = 0;
-        }
-
-/**
- * Iterates all combinations
- * @param callback
- */
-        void PowersIterator::iterate(const std::function<void(void)> &callback) {
-            size_t nNumberOfDeltas = m_pda.getNumberOfDeltas();
-            std::function<void(size_t)> iterateFactor = [&](size_t nFactor) -> void {
-                std::function<void(size_t)> iterateDelta = [&](size_t nDelta) -> void {
-                    bool incremented;
-                    do {
-                        if (nDelta < nNumberOfDeltas - 1)
-                            iterateDelta(nDelta + 1);
-                        else {
-                            m_aPositions[nFactor] = m_pda.calcCoeffPos(m_aaPowers[nFactor]);
-                            if (m_nNumberOfFactors > 0 && nFactor < m_nNumberOfFactors - 1)
-                                iterateFactor(nFactor + 1);
-                            else
-                                callback();
-                        }
-                        incremented = false;
-                        if (m_aaPowers[nFactor][nDelta] < m_nMaxDeltaPower
-                            && m_aDeltasPowersSums[nFactor] < m_pda.getOrder()
-                            && m_nTotalPowersSum < m_nMaxTotalPowersSum) {
-                            ++(m_aaPowers[nFactor][nDelta]);
-                            ++m_aFactorsPowersSums[nDelta];
-                            ++m_aDeltasPowersSums[nFactor];
-                            ++m_nTotalPowersSum;
-                            incremented = true;
-                        }
-                    } while (incremented);
-                    // Set this Delta power to 0:
-                    m_aFactorsPowersSums[nDelta] -= m_aaPowers[nFactor][nDelta];
-                    m_aDeltasPowersSums[nFactor] -= m_aaPowers[nFactor][nDelta];
-                    m_nTotalPowersSum -= m_aaPowers[nFactor][nDelta];
-                    m_aaPowers[nFactor][nDelta] = 0;
-                };
-                iterateDelta(0);
-                m_aPositions[nFactor] = 0;
-            };
-            if (m_pda.getNumberOfDeltas() == 0)
-                callback();
-            else
-                this->iterateFactor(0, callback);
-        }
-
 
 /** 
  * Returns the coefficient position of the result

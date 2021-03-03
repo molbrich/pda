@@ -1,7 +1,7 @@
 # pda
 Probability Distribution Arithmetic
 
-A C++ library for computing with random numbers.
+A C++ library for computing with distributed random numbers.
 
 ## Installation
 ```
@@ -19,7 +19,8 @@ in the pda_lib folder.
 
 ## Example
 
-Assume, we have two random variables: A resistor value r and a capacitance value c. Both are independently normal distributed. 
+Assume, we have two random variables: A resistance r and a capacitance c. 
+Both are independently normal distributed. 
 As a choice concerning the accuracy of our calculations, we will use a second order arithmetic. 
 As the first step in our program, we will initialize a Probability Distribution Arithmetic (PDA) by:
 ```
@@ -27,13 +28,15 @@ PDA pda(2,2);  // order: 2, : independent variables: 2
 ```
 This also implicitly initializes two standard normal distributed random variables Delta_0 and Delta_1.
 They are called Basis Random Variables (BRVs) and are statistically independent.
-Let us come back to the resistor and the capacitance:
-The random variable r should have a nominal value of 200 and a deviation of 50. This can be represented by
+Let us come back to the resistor and the capacitor:
+The random variable r should have a nominal value of 200 and a standard deviation of 50. 
+This can be represented by
 
 r = 200 + 50 Delta_0
 
 using the BRV Delta_0.
-Let the nominal value of the random variable c be 0.01 and the deviation 0.001. Then, c can be represented as
+Let the nominal value of the random variable c be 0.01 and the standard deviation 0.001. 
+Then, c can be represented as
 
 c = 0.01 + 0.001 \Delta_1
 
@@ -45,20 +48,23 @@ PDV c(pda, 0.01); // Nominal value of c is 0.01
 ```
 and add the distributed part to them:
 ```
-r.setDeltaCoeff(0, 50);    // Set deviation of r to 50 (using Delta_0)
-c.setDeltaCoeff(1, 0.001); // Set deviation of c to 0.01 (using Delta_1)
+r.setDeltaCoeff(0, 50);    // Set standard deviation of r to 50 (using Delta_0)
+c.setDeltaCoeff(1, 0.001); // Set standard deviation of c to 0.01 (using Delta_1)
 ```
-Then, we can calculate the time t as the product of r and c:
+Then, we can calculate a time t as the product of r and c:
 ```
 PDV t(pda);
 t = r * c;
 ```
 Now, the variable t contains the whole distribution information of r * c.
-E.g., we can determine the mean and variance of t by
+We can determine the mean (expected value) and the standard deviation of t by
 ```
 std::cout << "Mean of t: " << t.getMean() << std::endl;
-std::cout << "Variance of t: " << t.getVariance() << std::endl;
+std::cout << "Standard deviation of t: " << t.getStandardDeviation() << std::endl;
 ```
+We can add arbitrary calculations with PDVs.
+Correlations between the variables are automatically preserved.
+And we can get the (estimated) moments of each variable afterwards.
 
 Please have a look at the hello-world.cpp program in examples/hello-world as an other running example.
 

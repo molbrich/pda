@@ -60,7 +60,6 @@ void checkPowersIterator(Util::PowersIterator& pi, long nExpectedCombinationCoun
         for (size_t nFactor=0; nFactor < pi.getNumberOfFactors(); ++nFactor) {
             size_t  nPowerSumForDelta = 0;
             for (size_t nDelta=0; nDelta < pda.getNumberOfDeltas(); ++nDelta) {
-                assert(pi.getFactorDeltasPowers(nFactor)[nDelta] <= pi.getMaxDeltaPower());
                 nPowerSumForDelta += pi.getFactorDeltasPowers(nFactor)[nDelta];
             }
             assert(nPowerSumForDelta == pi.getDeltasPowersSums()[nFactor]);
@@ -79,14 +78,9 @@ void checkPowersIterator(Util::PowersIterator& pi, long nExpectedCombinationCoun
         //pi.dump();
         check();
     } while(pi.next());
-    if (nExpectedCombinationCount)
+    if (nExpectedCombinationCount) {
         assert(nExpectedCombinationCount == nCombinationCounter);
-    //std::cout << nCombinationCounter << std::endl;
-
-    nCombinationCounter = 0;
-    pi.iterate(check);
-    if (nExpectedCombinationCount)
-        assert(nExpectedCombinationCount == nCombinationCounter);
+    }
     //std::cout << nCombinationCounter << std::endl;
 
     for (size_t nFactor=0; nFactor < pi.getNumberOfFactors(); ++nFactor) {
@@ -141,12 +135,12 @@ void testPowersIterator() {
     }
     {
         PDA pda(2, 2);
-        Util::PowersIterator pi(pda, 1, 2, 2);
+        Util::PowersIterator pi(pda, 1);
         checkPowersIterator(pi, 6);
     }
     {
         PDA pda(2, 3);
-        Util::PowersIterator pi(pda, 2, 2, 4);
+        Util::PowersIterator pi(pda, 2, 2);
         checkPowersIterator(pi, 28);
     }
     {
@@ -266,6 +260,27 @@ void testFundamentals() {
             assert(x * y * z == y * z * x);
             assert(y * z * x == z * y * x);
             assert(y * z * x == z * (y * x));
+            assert(0.5 * x * y == (x * y) / 2);
+            assert(2 / x == 2 * 1 / x);
+            assert((x / y) / (x * z) == x / y / x / z);
+        }
+        // Simple /
+        {
+            PDV x{pda, 3};
+            PDV y{pda, 2};
+
+            assert(y.getNom() == 2);
+            x = x / y;
+            assert(x.getNom() == 1.5);
+            x = y / 4;
+            assert(x.getNom() == 0.5);
+            x = 4 / y;
+            assert(x.getNom() == 2);
+            PDV z(pda);
+            z = y / 4;
+            assert(z.getNom() == 0.5);
+            assert(x / y / z == y / z / x);
+            assert(y / z / x == y / (z * x));
             assert(2 * x * y == (x * y) * 2);
             assert((x * y) * (x * z) == x * y * x * z);
         }
@@ -309,7 +324,9 @@ void testFundamentals() {
         x.setNom(3);
         x.setDeltaCoeff(0,1.5);
         assert(x.getMean() == 3);
-        //assert(x.getCentralMoment(2) == 1.5);
+        assert(x.getStandardDeviation() == std::sqrt(x.getVariance()));
+        //std::cout << x.getVariance() << std::endl;
+        assert(x.getVariance() == 4.5);
     }
 }
 

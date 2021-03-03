@@ -59,24 +59,10 @@ namespace Pda {
              */
             const size_t m_nMaxTotalPowersSum;
 
-            /** Maximum delta power for each delta in the resulting product of all factors.
-             * \f[ \forall  \mbox{nDelta}\, :\, \mbox{aFactorsPowersSums}[\mbox{nDelta}] \leq \mbox{nMaxTotalDeltaPower}\f]
-             */
-            const size_t m_nMaxTotalDeltaPower;
-
-            /** Maximum delta power for each delta in each factor.
-             * \f[ \forall  \mbox{nDelta}, \mbox{nFactor}\, :\, \mbox{aaPowers}[\mbox{nFactor}][\mbox{nDelta}] \leq \mbox{nMaxDeltaPower}\f]
-             */
-            const size_t m_nMaxDeltaPower;
-            void iterateDelta(size_t nDelta, size_t nFactor, const std::function<void(void)> &callback);
-            void iterateFactor(size_t nFactor, const std::function<void(void)> &callback);
-
         public:
-            PowersIterator(const PDA &pda, size_t nNumberOfFactors,
-                           size_t nMaxTotalPowersSum = 0, size_t nMaxTotalDeltaPower = 0, size_t nMaxDeltaPower = 0);
+            PowersIterator(const PDA &pda, size_t nNumberOfFactors, size_t nMaxTotalPowersSum = 0);
 
             bool next();
-            void iterate(const std::function<void()> &callback);
             const PDA &getPDA() { return m_pda; };
             size_t getPosition() const;
             std::vector<size_t> &getPositions();
@@ -87,8 +73,6 @@ namespace Pda {
             size_t getTotelPowersSum() const { return m_nTotalPowersSum; };
             size_t getNumberOfFactors() const { return m_nNumberOfFactors; };
             size_t getMaxTotalPowersSum() const { return m_nMaxTotalPowersSum; };
-            size_t getMaxTotalDeltaPower() const { return m_nMaxTotalDeltaPower; };
-            size_t getMaxDeltaPower() const { return m_nMaxDeltaPower; };
             void dump() const;
         };
     }

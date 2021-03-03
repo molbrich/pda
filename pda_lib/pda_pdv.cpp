@@ -14,8 +14,6 @@
 
 namespace Pda {
 
-//#define USE_CALLBACK_ITERATOR
-
 //----------------------------------------------------------------
 // private methods:
 //----------------------------------------------------------------
@@ -39,20 +37,7 @@ namespace Pda {
         for (size_t nTerm = 1; nTerm <= m_pda.getOrder(); ++nTerm){
             if (aDerivatives.size() <= m_pda.getOrder()) continue;
             dDivisor *= static_cast<pdaValueType>(nTerm);
-            Util::PowersIterator pi(m_pda, nTerm, m_pda.getOrder(), m_pda.getOrder());
-#ifdef USE_CALLBACK_ITERATOR
-            pi.iterate([&]()->void {
-                dProduct = 1;
-                std::vector<size_t>& aPositions = pi.getPositions();
-                for (size_t nFactor = 0; nFactor < nTerm; ++nFactor)
-                    if (aPositions[nFactor] == 0) {
-                        dProduct = 0;
-                        break;
-                    }
-                    else dProduct *= m_aCoeff[aPositions[nFactor]];
-                result.m_aCoeff[pi.getPosition()] += aDerivatives[nTerm] / dDivisor * dProduct;
-            });
-#else
+            Util::PowersIterator pi(m_pda, nTerm, m_pda.getOrder());
             do {
                 dProduct = 1;
                 std::vector<size_t>& aPositions = pi.getPositions();
@@ -64,31 +49,8 @@ namespace Pda {
                     else dProduct *= m_aCoeff[aPositions[nFactor]];
                 result.m_aCoeff[pi.getPosition()] += aDerivatives[nTerm] / dDivisor * dProduct;
             } while (pi.next());
-#endif
         }
         return result;
-
-#if false
-        if (m_pda.getOrder() == 3){
-        PDV dX = *this;
-        dX.m_aCoeff[0] = 0;
-        PDV dX2 = dX * dX;
-        PDV dX3 = dX * dX2;
-        return aDerivatives[0] + aDerivatives[1] * dX + (aDerivatives[2] / 2) * dX2 + (aDerivatives[3] / 6) * dX3;
-    }
-
-    if (m_pda.getOrder() == 4){
-        PDV dX = *this;
-        dX.m_aCoeff[0] = 0;
-        PDV dX2 = dX * dX;
-        PDV dX3 = dX * dX2;
-        PDV dX4 = dX2 * dX2;
-        return aDerivatives[0] + aDerivatives[1] * dX + (aDerivatives[2] / 2) * dX2 + (aDerivatives[3] / 6) * dX3 + (aDerivatives[4] / 24) * dX4;
-    }
-
-    PDV result(m_pda, aDerivatives[0]);
-    return result;
-#endif
     }
 
 //----------------------------------------------------------------
@@ -435,17 +397,10 @@ namespace Pda {
     PDV operator*(const PDV& x, const PDV& y) {
         assert(&x.m_pda == &y.m_pda);
         PDV result(x.m_pda, 0);
-#ifdef USE_CALLBACK_ITERATOR
-        PowersIterator pi(x.m_pda, 2, x.m_pda.getOrder()) ;
-        pi.iterate([&]()->void{
-            result.m_aCoeff[pi.getPosition()] += x.m_aCoeff[pi.getPositions()[0]] * y.m_aCoeff[pi.getPositions()[1]];
-        });
-#else
         Util::PowersIterator pi(x.m_pda, 2, x.m_pda.getOrder()) ;
         do {
             result.m_aCoeff[pi.getPosition()] += x.m_aCoeff[pi.getPositions()[0]] * y.m_aCoeff[pi.getPositions()[1]];
         } while (pi.next());
-#endif
         return result;
     }
 
@@ -1005,6 +960,14 @@ namespace Pda {
     }
 
 /**
+ * Calculates the standard deviation.
+ * @returns Standard deviation
+ */
+    pdaValueType PDV::getStandardDeviation(const MomentMethod method, const size_t nMax) const {
+        return std::sqrt(getCentralMoment(2, method, nMax));
+    }
+
+/**
  * Calculates the variance.
  * @returns Variance = getCentralMoment(2)
  */
@@ -1058,105 +1021,102 @@ namespace Pda {
  * Calculates the nOrder'th raw moment.
  * @param nOrder Order of the raw moment to calculate
  * @param method
- * @param nMax FullMoments method: Maximum sum of the orders of the used moments, MonteCarlo method: Sample number
+ * @param nMax MonteCarloSamples: Sample number, MonteCarloTime: Max clocks (CLOCKS_PER_SECOND * second)
  * @returns Value of the raw moment
  */
     pdaValueType PDV::getRawMoment(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         pdaValueType dMoment = 0;
-        if(method == MomentMethod::Auto) {
-            size_t nMaxTotalPowersSum = (nMax == 0 ? std::max(m_pda.getOrder() * nOrder, nOrder) : nMax);
-            return getRawMoment(nOrder, MomentMethod::FullMoments, nMaxTotalPowersSum);
-        }
-        if(method == MomentMethod::FullMoments) {
+        if (method == MomentMethod::Auto ||
+            method == MomentMethod::FullMoments) {
             if (nOrder == 0)
                 return 1;
-            // Make sure no moment is calculated wrongly:
-            assert(nOrder * m_pda.getOrder() <= nMax);
-            Util::PowersIterator pi(m_pda, nOrder, nMax);
+            Util::PowersIterator pi(m_pda, nOrder, nOrder * m_pda.getOrder());
             do {
                 pdaValueType dAddend = 1;
-                std::vector<size_t>& aPositions = pi.getPositions();
+                std::vector<size_t> &aPositions = pi.getPositions();
                 for (size_t nFactor = 0; nFactor < nOrder; ++nFactor) {
                     dAddend *= m_aCoeff[aPositions[nFactor]];
                 }
                 if (similar(dAddend, 0)) continue;
-                std::vector<size_t>& aFactorsPowersSum = pi.getFactorsPowersSum();
+                std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
                 for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
                     dAddend *= m_pda.getDeltaMoment(nDelta, aFactorsPowersSum[nDelta]);
                 }
                 dMoment += dAddend;
             } while (pi.next());
+            return dMoment;
+        }
+
+        assert(method == MomentMethod::MonteCarloSamples ||
+               method == MomentMethod::MonteCarloTime);
+
+        pdaValueType dMomentSum = 0;
+        size_t nMaxDeltaPower = nOrder * m_pda.getOrder(); // Full power combinations
+
+        // Closure for processing a sample:
+        auto processSample = [&] {
+            std::vector<std::vector<pdaValueType>> powers(m_pda.getNumberOfDeltas(),
+                                                          std::vector<pdaValueType>(m_pda.getOrder() + 1));
+            for (size_t delta = 0; delta < m_pda.getNumberOfDeltas(); ++delta) {
+                pdaValueType deltaValue = m_pda.m_deltaDistributions[delta]->drawSample();
+                for (size_t order = 0; order <= m_pda.getOrder(); ++order)
+                    powers[delta][order] = ::pow(deltaValue, static_cast<double>(order));
+            }
+            pdaValueType dValue = 0;
+            pdaValueType dAddend;
+            Util::PowersIterator pi(m_pda, 1, nMaxDeltaPower);
+            do {
+                dAddend = m_aCoeff[pi.getPositions()[0]];
+                if (similar(dAddend, 0)) continue;
+                std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
+                for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
+                    if (aFactorsPowersSum[nDelta] > nMaxDeltaPower) {
+                        dAddend = 0;
+                        break;
+                    }
+                    dAddend *= powers[nDelta][aFactorsPowersSum[nDelta]];
+                }
+                dValue += dAddend;
+            } while (pi.next());
+            switch (nOrder) {
+                case 0:
+                    dMomentSum += 1;
+                    break;
+                case 1:
+                    dMomentSum += dValue;
+                    break;
+                case 2:
+                    dMomentSum += dValue * dValue;
+                    break;
+                case 3:
+                    dMomentSum += dValue * dValue * dValue;
+                    break;
+                case 4:
+                    dMomentSum += dValue * dValue * dValue * dValue;
+                    break;
+                default:
+                    throw std::runtime_error("Wrong moment order.");
+            }
+        };
+
+        if (method == MomentMethod::MonteCarloSamples) {
+            for (size_t i = 0; i < nMax; ++i) {
+                processSample();
+            }
+            dMoment = dMomentSum / static_cast<pdaValueType>(nMax);
         }
         else {
-            pdaValueType dMomentSum = 0;
-            size_t nMaxDeltaPower = nOrder * m_pda.getOrder(); // Full power combinations
+            assert(method == MomentMethod::MonteCarloTime);
             size_t count = 0;
-
-            auto processSample = [&] {
-                std::vector<std::vector<pdaValueType>> powers(m_pda.getNumberOfDeltas(),
-                                                              std::vector<pdaValueType>(m_pda.getOrder() + 1));
-                for (size_t delta = 0; delta < m_pda.getNumberOfDeltas(); ++delta) {
-                    pdaValueType deltaValue = m_pda.m_deltaDistributions[delta]->drawSample();
-                    for (size_t order = 0; order <= m_pda.getOrder(); ++order)
-                        powers[delta][order] = ::pow(deltaValue, static_cast<double>(order));
-                }
-                pdaValueType dValue = 0;
-                pdaValueType dAddend;
-                Util::PowersIterator pi(m_pda, 1, nMaxDeltaPower);
-                do {
-                    dAddend = m_aCoeff[pi.getPositions()[0]];
-                    if (similar(dAddend, 0)) continue;
-                    std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
-                    for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
-                        if (aFactorsPowersSum[nDelta] > nMaxDeltaPower) {
-                            dAddend = 0;
-                            break;
-                        }
-                        dAddend *= powers[nDelta][aFactorsPowersSum[nDelta]];
-                    }
-                    dValue += dAddend;
-                } while (pi.next());
-                switch (nOrder) {
-                    case 0:
-                        dMomentSum += 1;
-                        break;
-                    case 1:
-                        dMomentSum += dValue;
-                        break;
-                    case 2:
-                        dMomentSum += dValue * dValue;
-                        break;
-                    case 3:
-                        dMomentSum += dValue * dValue * dValue;
-                        break;
-                    case 4:
-                        dMomentSum += dValue * dValue * dValue * dValue;
-                        break;
-                    default:
-                        throw std::runtime_error("Wrong moment order.");
-                }
-
-            };
-            if (method == MomentMethod::MonteCarloSamples) {
-                count = nMax;
-                if (count == 0)
-                    count = 10000 * nOrder * nOrder * nOrder * m_pda.m_nOrder + 1;
-                for (size_t i = 0; i < count; ++i) {
-                    processSample();
-                }
-            }
-            else {
-                assert(method == MomentMethod::MonteCarloTime);
-                clock_t nMaxClocks = nMax; //(nMax == 0 ? 1000 : nMax);
-                clock_t nStarttime;
-                clock_t nClocks = 0;
-                do {
-                    nStarttime = clock();
-                    processSample();
-                    nClocks += clock() - nStarttime;
-                    ++count;
-                } while (nClocks < nMaxClocks);
-            }
+            clock_t nMaxClocks = nMax;
+            clock_t nStarttime;
+            clock_t nClocks = 0;
+            do {
+                nStarttime = clock();
+                processSample();
+                nClocks += clock() - nStarttime;
+                ++count;
+            } while (nClocks < nMaxClocks);
             dMoment = dMomentSum / static_cast<pdaValueType>(count);
         }
         return dMoment;
@@ -1389,11 +1349,11 @@ namespace Pda {
         return r;
     }
 
- /**
- * Determins the covariance.
- * \f[Cov(X,Y)=\langle (X-\langle X\rangle)(Y-\langle Y\rangle) \rangle\f]
- * @returns Covariance of value1 and value2
- */
+    /**
+    * Determins the covariance.
+    * \f[Cov(X,Y)=\langle (X-\langle X\rangle)(Y-\langle Y\rangle) \rangle\f]
+    * @returns Covariance of value1 and value2
+    */
     pdaValueType Cov(const PDV& value1,
                      const PDV& value2,
                      const MomentMethod method, const size_t nMax){

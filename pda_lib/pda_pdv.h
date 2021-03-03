@@ -149,6 +149,7 @@ namespace Pda {
 
         // Calculate moments:
         pdaValueType getMean(MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;
+        pdaValueType getStandardDeviation(MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;
         pdaValueType getVariance(MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;
         pdaValueType getSkewness(MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;
         pdaValueType getExcessKurtosis(MomentMethod method= MomentMethod::Auto, size_t nMax= 0) const;
