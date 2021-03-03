@@ -507,34 +507,6 @@ namespace Pda {
  */
     PDV PDV::operator^(const PDV & P) const {
         return exp(P * log(*this));
-#if false
-        pdaValueType aDerivatives[5][5];
-     pdaValueType x = getNom();
-     pdaValueType y = P.getNom();
-     pdaValueType xpy = pow(x,y);
-     pdaValueType lnx = log(x);
-     aDerivatives[0][0] = xpy;
-     aDerivatives[1][0] = xpy*x/y;
-     aDerivatives[0][1] = xpy*lnx;
-     aDerivatives[1][1] = (y*lnx+1)*xpy/x;
-     if (n_mOrder > 1) {
-     aDerivatives[2][0] = (y-1)*y*xpy/(x*x);
-     aDerivatives[2][1] = ((y-1)*y*lnx+2*y-1)*xpy/(x*x);
-     aDerivatives[0][2] = xpy*lnx*lnx;
-     aDerivatives[1][2] = (y*lnx+2)*xpy*lnx/x;
-     aDerivatives[2][2] = (((y*lnx-lnx+4)*y-2)*lnx+2)*xpy/(x*x);
-     }
-     if (n_mOrder > 2) {
-     aDerivatives[3][0] = ((y-3)*y-2)*y*xpy/(x*x*x);
-     aDerivatives[3][1] = xpy/(x*x*x);
-     aDerivatives[3][2] = xpy/(x*x*x);
-     aDerivatives[0][3] = xpy/(x*x*x);
-     aDerivatives[1][3] = 1;
-     aDerivatives[2][3] = xpy/(x*x*x);
-     aDerivatives[3][3] = xpy/(x*x*x);
-     }
-     return binaryOperation(P, aDerivatives);
-#endif
     }
 
 /** 
@@ -804,8 +776,7 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-
-    /**
+/**
  * Computes tangens
  * @param x Argument
  * @returns tan(x).

@@ -24,7 +24,7 @@ Both are independently normal distributed.
 As a choice concerning the accuracy of our calculations, we will use a second order arithmetic. 
 As the first step in our program, we will initialize a Probability Distribution Arithmetic (PDA) by:
 ```
-PDA pda(2,2);  // order: 2, : independent variables: 2
+PDA pda(2,2);  // Order: 2, : Independent variables: 2
 ```
 This also implicitly initializes two standard normal distributed random variables Delta_0 and Delta_1.
 They are called Basis Random Variables (BRVs) and are statistically independent.
@@ -38,7 +38,7 @@ using the BRV Delta_0.
 Let the nominal value of the random variable c be 0.01 and the standard deviation 0.001. 
 Then, c can be represented as
 
-c = 0.01 + 0.001 \Delta_1
+c = 0.01 + 0.001 Delta_1
 
 with Delta_1 being the second BRV.
 In C++ we define two Probability Distribution Variables (PDVs) for r and c:
