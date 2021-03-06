@@ -120,13 +120,15 @@ namespace Pda {
     size_t PDA::calcCoeffPos(const std::vector<size_t>& aPowers) const {
         size_t nPos = 0;
         size_t l = this->getOrder();
+        if (l == 0)
+            return nPos;
         size_t nDelta = this->getNumberOfDeltas();
         while (nDelta > 0) {
             --nDelta;
-            for (size_t m = 0; m < aPowers[nDelta]; ++m){
+            for (size_t m = 0; m < aPowers[nDelta]; ++m) {
                 nPos += this->getBinCoeff(nDelta + l, l);
                 assert(l>0);
-                --l;
+                    --l;
             }
         }
         return nPos;

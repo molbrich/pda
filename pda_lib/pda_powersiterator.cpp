@@ -33,10 +33,9 @@ namespace Pda {
                 m_aDeltasPowersSums(m_nNumberOfFactors, 0),
                 m_nTotalPowersSum(0),
                 m_aPositions(m_nNumberOfFactors, 0),
-                m_nMaxTotalPowersSum(
-                        nMaxTotalPowersSum == 0 ? nNumberOfFactors * pda.getNumberOfDeltas() * pda.getOrder()
-                                                : nMaxTotalPowersSum)
-                                 {
+                m_nMaxTotalPowersSum(nMaxTotalPowersSum == 0 ? nNumberOfFactors * pda.getNumberOfDeltas() * pda.getOrder()
+                                                             : nMaxTotalPowersSum)
+        {
             assert(m_nTotalPowersSum <= m_nMaxTotalPowersSum);
             assert(nNumberOfFactors > 0);
             assert(nNumberOfFactors <= 4);

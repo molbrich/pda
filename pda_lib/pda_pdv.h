@@ -43,6 +43,7 @@ namespace Pda {
         std::vector<pdaValueType> m_aCoeff;
 
         PDV unaryOperation(const std::vector<pdaValueType>& aDerivatives) const;
+        pdaValueType getRawMomentUnscaled(size_t nOrder, MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;
 
     public:
         // Constructors:
@@ -143,10 +144,10 @@ namespace Pda {
         pdaValueType getNom() const;
         void setDeltaCoeff(size_t nDeltaNumber,
                            pdaValueType factor);
-        pdaValueType getDeltaCoeff(size_t nDeltaNumber);
+        pdaValueType getDeltaCoeff(size_t nDeltaNumber) const;
         void setCoeff(const std::vector<size_t>& aPowers,
                       pdaValueType value);
-        pdaValueType getCoeff(const std::vector<size_t>& aPowers);
+        pdaValueType getCoeff(const std::vector<size_t>& aPowers) const;
 
         // Calculate moments:
         pdaValueType getMean(MomentMethod method=MomentMethod::Auto, size_t nMax=0) const;

@@ -880,14 +880,13 @@ namespace Pda {
  * The index of the first symbol is 0.
  * @returns factor
  */
-    pdaValueType PDV::getDeltaCoeff(size_t nDeltaNumber){
+    pdaValueType PDV::getDeltaCoeff(size_t nDeltaNumber) const {
         assert(nDeltaNumber < m_pda.getNumberOfDeltas());
         std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
         for (size_t i = 0; i < m_pda.getNumberOfDeltas(); ++i)
             aPowers[i] = 0;
         aPowers[nDeltaNumber] = 1;
-        pdaValueType r;
-        r = getCoeff(aPowers);
+        pdaValueType r = getCoeff(aPowers);
         return r;
     }
 
@@ -910,7 +909,7 @@ namespace Pda {
  *        Array of m_nNumberOfDeltas powers
  * @returns Coefficient
  */
-    pdaValueType PDV::getCoeff(const std::vector<size_t>& aPowers) {
+    pdaValueType PDV::getCoeff(const std::vector<size_t>& aPowers) const {
         return m_aCoeff[m_pda.calcCoeffPos(aPowers)];
     }
 
@@ -992,14 +991,50 @@ namespace Pda {
         return value.getVariance(method, nMax);
     }
 
-/** 
- * Calculates the nOrder'th raw moment.
- * @param nOrder Order of the raw moment to calculate
- * @param method
- * @param nMax MonteCarloSamples: Sample number, MonteCarloTime: Max clocks (CLOCKS_PER_SECOND * second)
- * @returns Value of the raw moment
- */
+    /**
+     * Calculates the nOrder'th raw moment using scaling to avoid numerical problems.
+     * @param nOrder Order of the raw moment to calculate
+     * @param method
+     * @param nMax MonteCarloSamples: Sample number, MonteCarloTime: Max clocks (CLOCKS_PER_SECOND * second)
+     * @returns Value of the raw moment
+     */
     pdaValueType PDV::getRawMoment(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
+        if (nOrder == 0)
+            return 1;
+        pdaValueType factor = 0;
+        size_t nonZeroCoefficientCount = 0;
+        for (size_t i=0; i<this->m_pda.getNumberOfDeltas(); ++i) {
+            pdaValueType coeff = std::abs(this->getDeltaCoeff(i));
+            if (coeff) {
+                factor += coeff;
+                ++nonZeroCoefficientCount;
+            }
+        }
+        if (nonZeroCoefficientCount)
+            factor /= static_cast<pdaValueType>(nonZeroCoefficientCount);
+        if (factor == 0.0)
+            factor = 1.0;
+        PDV scaled{*this/factor};
+        pdaValueType moment = scaled.getRawMomentUnscaled(nOrder, method, nMax);
+        for (size_t i=0; i<nOrder; i++)
+            moment *= factor;
+#ifndef NDEBUG
+        if (method == MomentMethod::Auto || method == MomentMethod::Full) {
+            pdaValueType unscaledMoment = this->getRawMomentUnscaled(nOrder, method, nMax);
+            assert (similar(moment,unscaledMoment));
+        }
+#endif
+        return moment;
+    }
+
+    /**
+     * Calculates the nOrder'th raw moment without scaling.
+     * @param nOrder Order of the raw moment to calculate
+     * @param method
+     * @param nMax MonteCarloSamples: Sample number, MonteCarloTime: Max clocks (CLOCKS_PER_SECOND * second)
+     * @returns Value of the raw moment
+     */
+        pdaValueType PDV::getRawMomentUnscaled(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         pdaValueType dMoment = 0;
         if (method == MomentMethod::Auto ||
             method == MomentMethod::Full) {
