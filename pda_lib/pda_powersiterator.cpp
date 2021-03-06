@@ -1,7 +1,17 @@
-// pda_powersiterator.cpp
-// Probability DeltaDistribution Arithmetic
-// Implementation of classes PowersIterator
-// (c) Markus Olbrich
+/**
+ * pda_powersiterator.cpp
+ * Probability Distribution Arithmetic
+ * Implementation of classes PowersIterator
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include "pda_powersiterator.h"
 #include "pda_pda.h"
@@ -14,16 +24,16 @@ namespace Pda {
 //----------------------------------------------------------------
 // PowersIterator
 //----------------------------------------------------------------
-/**
- * Constructor
- * Intitializes the iterator
- * @param pda
- * @param nNumberOfFactors
- * @param nMaxDeltaPower Maximum delta power for each delta in each factor
- * @param nMaxTotalDeltasPowerSum Maximum sum of delta powers in the product
- * @param nMaxDeltaPowersSum Maximum Delta
- * Postcondition: The iterator points to nominal values.
- */
+        /**
+         * Constructor
+         * Intitializes the iterator
+         * @param pda
+         * @param nNumberOfFactors
+         * @param nMaxDeltaPower Maximum delta power for each delta in each factor
+         * @param nMaxTotalDeltasPowerSum Maximum sum of delta powers in the product
+         * @param nMaxDeltaPowersSum Maximum Delta
+         * Postcondition: The iterator points to nominal values.
+         */
         PowersIterator::PowersIterator(const PDA &pda, size_t nNumberOfFactors,
                                        const size_t nMaxTotalPowersSum) :
                 m_pda(pda),
@@ -41,9 +51,9 @@ namespace Pda {
             assert(nNumberOfFactors <= 4);
         }
 
-/** 
- * Go to next combination.
- */
+        /**
+         * Go to next combination.
+         */
         bool PowersIterator::next() {
             for (size_t nFactor = 0; nFactor < m_nNumberOfFactors; ++nFactor) {
                 size_t nDelta;
@@ -79,52 +89,52 @@ namespace Pda {
             return false;
         }
 
-/** 
- * Returns the coefficient position of the result
- * @returns Position
- */
+        /**
+         * Returns the coefficient position of the result
+         * @returns Position
+         */
         size_t PowersIterator::getPosition() const {
             assert(m_nTotalPowersSum <= m_pda.getOrder());
             return m_pda.calcCoeffPos(m_aFactorsPowersSums);
         }
 
-/** 
- * Returns an array of nNumberOfFactors coefficient positions.
- * @returns Position array
- */
+        /**
+         * Returns an array of nNumberOfFactors coefficient positions.
+         * @returns Position array
+         */
         std::vector<size_t> &PowersIterator::getPositions() {
             return m_aPositions;
         }
 
-/**
- * Returns an array of nNumberOfDeltas power sums.
- * @see PowersIterator::m_aFactorsPowersSums
- * @returns Power sum array
- */
+        /**
+         * Returns an array of nNumberOfDeltas power sums.
+         * @see PowersIterator::m_aFactorsPowersSums
+         * @returns Power sum array
+         */
         std::vector<size_t> &PowersIterator::getFactorsPowersSum() {
             return m_aFactorsPowersSums;
         }
 
-/** 
- * Returns an array of nNumberOfDeltas delta powers for a given factor.
- * @param nFactor Factor number
- * @returns Delta power array
- */
+        /**
+         * Returns an array of nNumberOfDeltas delta powers for a given factor.
+         * @param nFactor Factor number
+         * @returns Delta power array
+         */
         std::vector<size_t> &PowersIterator::getFactorDeltasPowers(size_t nFactor) {
             return m_aaPowers[nFactor];
         }
 
-/** 
- * Returns an array of nNumberOfFactors power sums.
- * @returns Power sum array
- */
+        /**
+         * Returns an array of nNumberOfFactors power sums.
+         * @returns Power sum array
+         */
         std::vector<size_t> &PowersIterator::getDeltasPowersSums() {
             return m_aDeltasPowersSums;
         }
 
-/**
- * Dumps current combination
- */
+        /**
+         * Dumps current combination
+         */
         void PowersIterator::dump() const {
             for (size_t nFactor = 0; nFactor < m_nNumberOfFactors; ++nFactor) {
                 std::cout << "(Factor " << nFactor << ":";

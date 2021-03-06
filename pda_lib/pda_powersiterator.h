@@ -1,7 +1,17 @@
-// pda_powersiterator.h
-// Probability DeltaDistribution Arithmetic
-// Header for basic classes PowersIterator and PDV
-// (c) Markus Olbrich
+/**
+ * pda_powersiterator.h
+ * Probability Distribution Arithmetic
+ * Header for basic classes PowersIterator and PDV
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #ifndef PDA_POWERS_ITERATOR_H
 #define PDA_POWERS_ITERATOR_H
@@ -12,14 +22,14 @@
 namespace Pda {
     namespace Util {
 
-/** 
- * @class PowersIterator
- * Iterator for calculating the product of several PDVs.
- * \f[\prod_{i=0}^{\mbox{nNumberOfFactors}}X_i\f]
- * \f[X_i \in PDV \f]
- * \f[X = \sum\limits_{\vec{i}\in D} 
- \left(x_{i_1,\dots,i_n} \prod\limits_{j=1}^n \Delta_j^{i_j}\right)\f]
- */
+        /**
+         * @class PowersIterator
+         * Iterator for calculating the product of several PDVs.
+         * \f[\prod_{i=0}^{\mbox{nNumberOfFactors}}X_i\f]
+         * \f[X_i \in PDV \f]
+         * \f[X = \sum\limits_{\vec{i}\in D}
+         \left(x_{i_1,\dots,i_n} \prod\limits_{j=1}^n \Delta_j^{i_j}\right)\f]
+         */
         class PowersIterator {
         private:
             PowersIterator &operator=(const PowersIterator &);

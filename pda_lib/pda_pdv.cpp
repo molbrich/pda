@@ -1,7 +1,16 @@
-// pda_pdv.cpp
-// Probability DeltaDistribution Arithmetic
-// Implementation of classes PowersIterator and PDV
-// (c) Markus Olbrich
+/**
+ * pda_pdv.cpp
+ * Probability Distribution Arithmetic Variable
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include "pda_pda.h"
 #include "pda_pdv.h"
@@ -18,17 +27,17 @@ namespace Pda {
 // private methods:
 //----------------------------------------------------------------
 
-/** 
- * Performs a unary numerical operation on (*this). 
- * \f[\sum\limits_{i=0}^{l} \frac{1}{i!}\frac{\partial^{i}}{\partial X^i}T(x_0)
- (X-x_0)^i\f]
- * Sets the coefficients according to given derivatives
- * using a Taylor series.
- * @param aDerivatives First four derivatives of the 
- *        operation.
- * @returns The result of the operation
- * @note Deprecated
- */
+    /**
+     * Performs a unary numerical operation on (*this).
+     * \f[\sum\limits_{i=0}^{l} \frac{1}{i!}\frac{\partial^{i}}{\partial X^i}T(x_0)
+     (X-x_0)^i\f]
+     * Sets the coefficients according to given derivatives
+     * using a Taylor series.
+     * @param aDerivatives First four derivatives of the
+     *        operation.
+     * @returns The result of the operation
+     * @note Deprecated
+     */
     PDV PDV::unaryOperation(const std::vector<pdaValueType>& aDerivatives) const {
         PDV result(m_pda, aDerivatives[0]);
         pdaValueType dProduct;
@@ -53,24 +62,24 @@ namespace Pda {
         return result;
     }
 
-//----------------------------------------------------------------
-// public methods:
-//----------------------------------------------------------------
+    //----------------------------------------------------------------
+    // public methods:
+    //----------------------------------------------------------------
 
-// Constructors:
-/**
- * Simple Constructor.
- */
+    // Constructors:
+    /**
+     * Simple Constructor.
+     */
     PDV::PDV(PDA& pda) :
             m_pda(pda),
             m_aCoeff(pda.getNumberOfCoeffs(), 0.0) {
         ++pda.m_nNumberOfPDVInstances;
     }
 
-/** 
- * Constructor that sets the nominal value.
- * @param nomValue Nominal value
- */
+    /**
+     * Constructor that sets the nominal value.
+     * @param nomValue Nominal value
+     */
     PDV::PDV(PDA& pda, pdaValueType nomValue) :
             m_pda(pda),
             m_aCoeff(pda.getNumberOfCoeffs(), 0.0) {
@@ -78,25 +87,25 @@ namespace Pda {
         ++pda.m_nNumberOfPDVInstances;
     }
 
-/** 
- * Copy constructor.
- */
+    /**
+     * Copy constructor.
+     */
     PDV::PDV(const PDV& x) : m_pda(x.m_pda),  m_aCoeff(x.m_aCoeff) {
         ++m_pda.m_nNumberOfPDVInstances;
     }
 
-/** 
- * Destructor.
- */
+    /**
+     * Destructor.
+     */
     PDV::~PDV() {
         --m_pda.m_nNumberOfPDVInstances;
     }
 
-/**
- * Similarity test.
- * @param value, value2
- * @returns True if values are nearly equal
- */
+    /**
+     * Similarity test.
+     * @param value, value2
+     * @returns True if values are nearly equal
+     */
     bool PDV::similar(pdaValueType value1, pdaValueType value2, pdaValueType epsilon) {
         pdaValueType diff = fabs(value1 - value2);
         if (diff < 1e-20)
@@ -109,11 +118,11 @@ namespace Pda {
         return false;
     }
 
-/**
- * Similarity test
- * @param epsilon Relative threashold value
- * @returns True if all coefficients are equal
- */
+    /**
+     * Similarity test
+     * @param epsilon Relative threashold value
+     * @returns True if all coefficients are equal
+     */
     bool PDV::similar(const PDV& x, const pdaValueType epsilon) const {
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             if (!PDV::similar(m_aCoeff[i], x.m_aCoeff[i])) {
@@ -130,47 +139,47 @@ namespace Pda {
         return x.similar(y);
     }
 
-/** 
- * Comparison
- * @param x Right value
- * @returns True if *this.getNom()<x.getNom()
- */
+    /**
+     * Comparison
+     * @param x Right value
+     * @returns True if *this.getNom()<x.getNom()
+     */
     bool PDV::operator<(const PDV& x) const {
         return m_aCoeff[0] < x.m_aCoeff[0];
     }
 
-/** 
- * Comparison
- * @param x Right value
- * @returns True if *this.getNom()<=x.getNom()
- */
+    /**
+     * Comparison
+     * @param x Right value
+     * @returns True if *this.getNom()<=x.getNom()
+     */
     bool PDV::operator<=(const PDV& x) const {
         return m_aCoeff[0] <= x.m_aCoeff[0];
     }
 
-/** 
- * Comparison
- * @param x Right value
- * @returns True if *this.getNom()>x.getNom()
- */
+    /**
+     * Comparison
+     * @param x Right value
+     * @returns True if *this.getNom()>x.getNom()
+     */
     bool PDV::operator>(const PDV& x) const {
         return m_aCoeff[0] > x.m_aCoeff[0];
     }
 
-/** 
- * Comparison
- * @param x Right value
- * @returns True if *this.getNom()>=x.getNom()
- */
+    /**
+     * Comparison
+     * @param x Right value
+     * @returns True if *this.getNom()>=x.getNom()
+     */
     bool PDV::operator>=(const PDV& x) const {
         return m_aCoeff[0] >= x.m_aCoeff[0];
     }
 
-/** 
- * Equality test
- * @param x Right value
- * @returns True if all coefficients are equal
- */
+    /**
+     * Equality test
+     * @param x Right value
+     * @returns True if all coefficients are equal
+     */
     bool PDV::operator==(const PDV &P) const {
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             if (!similar(m_aCoeff[i], P.m_aCoeff[i]))
@@ -178,11 +187,11 @@ namespace Pda {
         return true;
     }
 
-/** 
- * Not equal test
- * @param x Right value
- * @returns True if any coefficient is not equal
- */
+    /**
+     * Not equal test
+     * @param x Right value
+     * @returns True if any coefficient is not equal
+     */
     bool PDV::operator!=(const PDV& x) const {
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             if (!similar(m_aCoeff[i], x.m_aCoeff[i])) {
@@ -191,22 +200,22 @@ namespace Pda {
         return false;
     }
 
-/** 
- * Assignment operator. [PDV] = [PDV]
- * @param x Right value
- * @returns *this
- */
+    /**
+     * Assignment operator. [PDV] = [PDV]
+     * @param x Right value
+     * @returns *this
+     */
     PDV& PDV::operator=(const PDV& x) {
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             m_aCoeff[i] = x.m_aCoeff[i];
         return *this;
     }
 
-/** 
- * Assignment operator. [PDV] = [pdaValueType]
- * @param d Right value
- * @returns *this
- */
+    /**
+     * Assignment operator. [PDV] = [pdaValueType]
+     * @param d Right value
+     * @returns *this
+     */
     PDV& PDV::operator=(const pdaValueType d) {
         m_aCoeff[0] = d;
         for (size_t i = 1; i < m_pda.getNumberOfCoeffs(); ++i)
@@ -214,12 +223,12 @@ namespace Pda {
         return *this;
     }
 
-/** 
- * Operator [PDV] + [PDV]
- * @param x&
- * @param y&
- * @returns x + y
- */
+    /**
+     * Operator [PDV] + [PDV]
+     * @param x&
+     * @param y&
+     * @returns x + y
+     */
     PDV operator+(const PDV& x, const PDV& y) {
         PDV temp(x.m_pda);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
@@ -242,12 +251,12 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Operator [PDV] + [pdaValueType]
- * @param x Left value
- * @param d Right value
- * @returns x + d
- */
+    /**
+     * Operator [PDV] + [pdaValueType]
+     * @param x Left value
+     * @param d Right value
+     * @returns x + d
+     */
     PDV operator+(const PDV& x, const pdaValueType d) {
         PDV temp(x);
         temp.m_aCoeff[0] += d;
@@ -258,12 +267,12 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Operator [pdaValueType] + [PDV]
- * @param d Left value
- * @param x Right value
- * @returns d + P
- */
+    /**
+     * Operator [pdaValueType] + [PDV]
+     * @param d Left value
+     * @param x Right value
+     * @returns d + P
+     */
     PDV operator+(const pdaValueType d, const PDV& x) {
         PDV temp(x);
         temp.m_aCoeff[0] += d;
@@ -274,41 +283,41 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Calculating assignment operator. [PDV] += [PDV]
- * @param P Right value
- * @returns *this
- */
+    /**
+     * Calculating assignment operator. [PDV] += [PDV]
+     * @param P Right value
+     * @returns *this
+     */
     PDV& PDV::operator+=(const PDV& P) {
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             this->m_aCoeff[i] += P.m_aCoeff[i];
         return *this;
     }
 
-/** 
- * Calculating assignment operator. [PDV] += [pdaValueType]
- * @param d Right value
- * @returns *this
- */
+    /**
+     * Calculating assignment operator. [PDV] += [pdaValueType]
+     * @param d Right value
+     * @returns *this
+     */
     PDV& PDV::operator+=(const pdaValueType d) {
         m_aCoeff[0] += d;
         return *this;
     }
 
-/** 
- * Operator - [PDV&]
- * @returns -(*this)
- */
+    /**
+     * Operator - [PDV&]
+     * @returns -(*this)
+     */
     PDV PDV::operator-() const & {
         PDV temp{m_pda};
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             temp.m_aCoeff[i] = -m_aCoeff[i];
         return temp;
     }
-/**
- * Operator - [PDV&&]
- * @returns -(*this)
- */
+    /**
+     * Operator - [PDV&&]
+     * @returns -(*this)
+     */
     PDV PDV::operator-() && {
         assert(m_aCoeff.size() == m_pda.getNumberOfCoeffs());
         for (auto& coeff: m_aCoeff)
@@ -316,12 +325,12 @@ namespace Pda {
         return *this;
     }
 
-/** 
- * Operator [PDV] - [PDV]
- * @param x Lef value
- * @param y Right value
- * @returns x - y
- */
+    /**
+     * Operator [PDV] - [PDV]
+     * @param x Lef value
+     * @param y Right value
+     * @returns x - y
+     */
     PDV operator-(const PDV& x, const PDV& y) {
         PDV temp(x.m_pda);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
@@ -344,9 +353,9 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Operator [PDV] - [pdaValueType]
- */
+    /**
+     * Operator [PDV] - [pdaValueType]
+     */
     PDV operator-(const PDV& x, const pdaValueType d) {
         PDV temp(x);
         temp.m_aCoeff[0] -= d;
@@ -357,43 +366,43 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Operator [pdaValueType] - [PDV]
- */
+    /**
+     * Operator [pdaValueType] - [PDV]
+     */
     PDV operator-(const pdaValueType d, const PDV& x) {
         PDV temp(-x);
         temp.m_aCoeff[0] += d;
         return temp;
     }
-/**
- * Operator [pdaValueType] - [PDV]
- * */
+    /**
+     * Operator [pdaValueType] - [PDV]
+     * */
     PDV operator-(const pdaValueType d, PDV&& x) {
         x=-x;
         x.m_aCoeff[0] += d;
         return x;
     }
 
-/** 
- * Calculating assignment operator. [PDV] -= [PDV]
- */
+    /**
+     * Calculating assignment operator. [PDV] -= [PDV]
+     */
     PDV& PDV::operator-=(const PDV& P){
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             m_aCoeff[i] -= P.m_aCoeff[i];
         return *this;
     }
 
-/** 
- * Calculating assignment operator. [PDV] -= [pdaValueType]
- */
+    /**
+     * Calculating assignment operator. [PDV] -= [pdaValueType]
+     */
     PDV& PDV::operator-=(const pdaValueType d){
         m_aCoeff[0] -= d;
         return *this;
     }
 
-/** 
- * Operator [PDV] * [PDV]
- */
+    /**
+     * Operator [PDV] * [PDV]
+     */
     PDV operator*(const PDV& x, const PDV& y) {
         assert(&x.m_pda == &y.m_pda);
         PDV result(x.m_pda, 0);
@@ -404,9 +413,9 @@ namespace Pda {
         return result;
     }
 
-/** 
- * Operator [PDV] * [pdaValueType]
- */
+    /**
+     * Operator [PDV] * [pdaValueType]
+     */
     PDV operator*(const PDV& x, const pdaValueType d) {
         PDV temp{x};
         assert(x.m_aCoeff.size() == x.m_pda.getNumberOfCoeffs());
@@ -414,9 +423,9 @@ namespace Pda {
             coeff *= d;
         return temp;
     }
-/**
- * Operator [PDV] * [pdaValueType]
- */
+    /**
+     * Operator [PDV] * [pdaValueType]
+     */
     PDV operator*(PDV&& x, const pdaValueType d) {
         assert(x.m_aCoeff.size() == x.m_pda.getNumberOfCoeffs());
         for (auto& coeff: x.m_aCoeff)
@@ -424,9 +433,9 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Operator [pdaValueType] * [PDV]
- */
+    /**
+     * Operator [pdaValueType] * [PDV]
+     */
     PDV operator *(const pdaValueType d, const PDV& x) {
         PDV temp{x.getPDA()};
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
@@ -440,17 +449,17 @@ namespace Pda {
         return x;
     }
 
-/** 
- * Calculating assignment operator. [PDV] *= [PDV]
- */
+    /**
+     * Calculating assignment operator. [PDV] *= [PDV]
+     */
     PDV& PDV::operator*=(const PDV& x) {
         *this = *this * x;
         return *this;
     }
 
-/** 
- * Calculating assignment operator. [PDV] *= [pdaValueType]
- */
+    /**
+     * Calculating assignment operator. [PDV] *= [pdaValueType]
+     */
     PDV& PDV::operator*=(const pdaValueType d) {
         assert (m_aCoeff.size() == m_pda.getNumberOfCoeffs());
         for (auto& coeff: m_aCoeff)
@@ -458,16 +467,16 @@ namespace Pda {
         return *this;
     }
 
-/** 
- * Operator [PDV] / [PDV]
- */
+    /**
+     * Operator [PDV] / [PDV]
+     */
     PDV operator/(const PDV& x, const PDV& y) {
         return x * inv(y);
     }
 
-/** 
- * Operator [PDV] / [pdaValueType]
- */
+    /**
+     * Operator [PDV] / [pdaValueType]
+     */
     PDV PDV::operator/(pdaValueType d) const {
         PDV temp(*this);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
@@ -475,66 +484,66 @@ namespace Pda {
         return temp;
     }
 
-/** 
- * Operator [pdaValueType] / [PDV]
- */
+    /**
+     * Operator [pdaValueType] / [PDV]
+     */
     PDV operator/(const pdaValueType d, const PDV& x){
         return d * inv(x);
     }
 
-/** 
- * Calculating assignment operator. [PDV] /= [PDV]
- */
+    /**
+     * Calculating assignment operator. [PDV] /= [PDV]
+     */
     PDV& PDV::operator/=(const PDV& P) {
         *this = *this / P;
         return *this;
     }
 
-/** 
- * Calculating assignment operator. [PDV] /= [pdaValueType]
- * @param d Right value
- * @returns *this
- */
+    /**
+     * Calculating assignment operator. [PDV] /= [pdaValueType]
+     * @param d Right value
+     * @returns *this
+     */
     PDV & PDV::operator/=(const pdaValueType d) {
         for (auto& coeff: m_aCoeff)
             coeff /= d;
         return *this;
     }
 
-/** 
- * Operator [PDV] ^ [PDV]
- * @param P Right value
- * @returns (*this) ^ P
- */
+    /**
+     * Operator [PDV] ^ [PDV]
+     * @param P Right value
+     * @returns (*this) ^ P
+     */
     PDV PDV::operator^(const PDV & P) const {
         return exp(P * log(*this));
     }
 
-/** 
- * Operator [PDV] ^ [pdaValueType]
- * @param d Right value
- * @returns *this ^ d
- */
+    /**
+     * Operator [PDV] ^ [pdaValueType]
+     * @param d Right value
+     * @returns *this ^ d
+     */
     PDV PDV::operator ^(pdaValueType d) const {
         return exp(d * log(*this));
     }
 
-/** 
- * Operator [pdaValueType] ^ [PDV]
- * @param d Left value
- * @param P Right value
- * @returns d ^ P
- */
+    /**
+     * Operator [pdaValueType] ^ [PDV]
+     * @param d Left value
+     * @param P Right value
+     * @returns d ^ P
+     */
     PDV operator ^(const pdaValueType d,
                    const PDV & P){
         return exp(P * log(d));
     }
 
-/**
- * Natural logarithm.
- * @param x Argument
- * @returns The natural logarithm of P.
- */
+    /**
+     * Natural logarithm.
+     * @param x Argument
+     * @returns The natural logarithm of P.
+     */
     PDV log(const PDV& x) {
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         assert (x.getNom() > 0.0);
@@ -570,22 +579,22 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Natural exponential.
- * @param x Argument
- * @returns e to the power of x.
- */
+    /**
+     * Natural exponential.
+     * @param x Argument
+     * @returns e to the power of x.
+     */
     PDV exp(const PDV& x) {
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         aDerivatives[4] = aDerivatives[3] = aDerivatives[2] = aDerivatives[1] = aDerivatives[0] = std::exp(x.getNom());
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Square root
- * @param x Argument
- * @returns Square root of x.
- */
+    /**
+     * Square root
+     * @param x Argument
+     * @returns Square root of x.
+     */
     PDV sqrt(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xNom = x.getNom();
@@ -618,11 +627,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Inverse of square root
- * @param x Argument
- * @returns Inverse square root of x.
- */
+    /**
+     * Inverse of square root
+     * @param x Argument
+     * @returns Inverse square root of x.
+     */
     PDV isqrt(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xNom = x.getNom();
@@ -639,11 +648,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes log(1.0 + exp(x))
- * @param x Argument
- * @returns Result.
- */
+    /**
+     * Computes log(1.0 + exp(x))
+     * @param x Argument
+     * @returns Result.
+     */
     PDV logexp(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType ex = ::exp(x.getNom());
@@ -659,11 +668,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes the inverse
- * @param x Argument
- * @returns 1/x
- */
+    /**
+     * Computes the inverse
+     * @param x Argument
+     * @returns 1/x
+     */
     PDV inv(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xNom = x.getNom();
@@ -679,11 +688,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes sine
- * @param x Argument
- * @returns sin(x).
- */
+    /**
+     * Computes sine
+     * @param x Argument
+     * @returns sin(x).
+     */
     PDV sin(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType s = std::sin(x.getNom());
@@ -696,11 +705,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes arcus sine
- * @param x Argument
- * @returns asin(x).
- */
+    /**
+     * Computes arcus sine
+     * @param x Argument
+     * @returns asin(x).
+     */
     PDV asin(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xn = x.getNom();
@@ -724,11 +733,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes cosine
- * @param x Argument
- * @returns cos(x).
- */
+    /**
+     * Computes cosine
+     * @param x Argument
+     * @returns cos(x).
+     */
     PDV cos(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType s = std::sin(x.getNom());
@@ -749,11 +758,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes arcus cosine
- * @param x Argument
- * @returns acos(x).
- */
+    /**
+     * Computes arcus cosine
+     * @param x Argument
+     * @returns acos(x).
+     */
     PDV acos(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xn = x.getNom();
@@ -777,20 +786,20 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes tangens
- * @param x Argument
- * @returns tan(x).
- */
+    /**
+     * Computes tangens
+     * @param x Argument
+     * @returns tan(x).
+     */
     PDV tan(const PDV& x) {
         return sin(x) / cos(x);
     }
 
-/**
- * Computes arcus tangens
- * @param x Argument
- * @returns Result.
- */
+    /**
+     * Computes arcus tangens
+     * @param x Argument
+     * @returns Result.
+     */
     PDV atan(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType xNom = x.getNom();
@@ -806,11 +815,11 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes tangens hyperbolicus
- * @param x Argument
- * @returns Result.
- */
+    /**
+     * Computes tangens hyperbolicus
+     * @param x Argument
+     * @returns Result.
+     */
     PDV tanh(const PDV& x){
         static std::vector<pdaValueType> aDerivatives(5); // The first four derivatives
         pdaValueType t = std::tanh(x.getNom());
@@ -826,42 +835,42 @@ namespace Pda {
         return x.unaryOperation(aDerivatives);
     }
 
-/**
- * Computes power
- * @param x Base
- * @param y Exponent
- * @returns x ^ y.
- */
+    /**
+     * Computes power
+     * @param x Base
+     * @param y Exponent
+     * @returns x ^ y.
+     */
     PDV pow(const PDV& x, const PDV& y){
         return exp(y * log(x));
     }
 
-/**
- * Computes power
- * @param x Base
- * @param y Exponent
- * @returns x ^ y.
- */
+    /**
+     * Computes power
+     * @param x Base
+     * @param y Exponent
+     * @returns x ^ y.
+     */
     PDV pow(const PDV& x, const pdaValueType y){
         return exp(y * log(x));
     }
 
-/** 
- * Sets the nominal value. 
- * Leaves all other coefficients unchanged.
- * @param value New nominal value
- */
+    /**
+     * Sets the nominal value.
+     * Leaves all other coefficients unchanged.
+     * @param value New nominal value
+     */
     void PDV::setNom(pdaValueType value){
         m_aCoeff[0] = value;
     }
 
-/** 
- * Sets the factor (coeffecient) of a single Delta symbol. 
- * Leaves all other coefficients unchanged
- * @param nDeltaNumber Index of the Delta Symbol.
- * The index of the first symbol is 0.
- * @param factor New coefficient
- */
+    /**
+     * Sets the factor (coeffecient) of a single Delta symbol.
+     * Leaves all other coefficients unchanged
+     * @param nDeltaNumber Index of the Delta Symbol.
+     * The index of the first symbol is 0.
+     * @param factor New coefficient
+     */
     void PDV::setDeltaCoeff(size_t nDeltaNumber,
                             pdaValueType factor){
         assert(nDeltaNumber < m_pda.getNumberOfDeltas());
@@ -874,12 +883,12 @@ namespace Pda {
         setCoeff(aPowers, factor);
     }
 
-/** 
- * Determines the factor (coeffecient) of a single Delta symbol. 
- * @param nDeltaNumber Index of the Delta Symbol.
- * The index of the first symbol is 0.
- * @returns factor
- */
+    /**
+     * Determines the factor (coeffecient) of a single Delta symbol.
+     * @param nDeltaNumber Index of the Delta Symbol.
+     * The index of the first symbol is 0.
+     * @returns factor
+     */
     pdaValueType PDV::getDeltaCoeff(size_t nDeltaNumber) const {
         assert(nDeltaNumber < m_pda.getNumberOfDeltas());
         std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
@@ -890,58 +899,58 @@ namespace Pda {
         return r;
     }
 
-/** 
- * Sets the coeffecient of an arbitrary Delta symbol power combination. 
- * Leaves all other coefficients unchanged
- * @param aPowers
- *        Array of m_nNumberOfDeltas powers
- * @param value New coefficient value
- */
+    /**
+     * Sets the coeffecient of an arbitrary Delta symbol power combination.
+     * Leaves all other coefficients unchanged
+     * @param aPowers
+     *        Array of m_nNumberOfDeltas powers
+     * @param value New coefficient value
+     */
     void PDV::setCoeff(const std::vector<size_t>& aPowers,
                        pdaValueType value) {
         m_aCoeff[m_pda.calcCoeffPos(aPowers)] = value;
     }
 
-/** 
- * Gets the coeffecient of an arbitrary Delta symbol power combination. 
- * Leaves all other coefficients unchanged
- * @param aPowers
- *        Array of m_nNumberOfDeltas powers
- * @returns Coefficient
- */
+    /**
+     * Gets the coeffecient of an arbitrary Delta symbol power combination.
+     * Leaves all other coefficients unchanged
+     * @param aPowers
+     *        Array of m_nNumberOfDeltas powers
+     * @returns Coefficient
+     */
     pdaValueType PDV::getCoeff(const std::vector<size_t>& aPowers) const {
         return m_aCoeff[m_pda.calcCoeffPos(aPowers)];
     }
 
-/** 
- * Determins the nominal value.
- * @returns Nominal value
- */
+    /**
+     * Determins the nominal value.
+     * @returns Nominal value
+     */
     pdaValueType PDV::getNom() const {
         return m_aCoeff[0];
     }
 
-/** 
- * Calculates the expected (mean) value.
- * @returns  Mean value
- * @see E()
- */
+    /**
+     * Calculates the expected (mean) value.
+     * @returns  Mean value
+     * @see E()
+     */
     pdaValueType PDV::getMean(const MomentMethod method, const size_t nMax) const {
         return getRawMoment(1, method, nMax);
     }
 
-/**
- * Calculates the standard deviation.
- * @returns Standard deviation
- */
+    /**
+     * Calculates the standard deviation.
+     * @returns Standard deviation
+     */
     pdaValueType PDV::getStandardDeviation(const MomentMethod method, const size_t nMax) const {
         return std::sqrt(getVariance(method, nMax));
     }
 
-/**
- * Calculates the variance.
- * @returns Variance = getCentralMoment(2)
- */
+    /**
+     * Calculates the variance.
+     * @returns Variance = getCentralMoment(2)
+     */
     pdaValueType PDV::getVariance(const MomentMethod method, const size_t nMax) const {
         pdaValueType v = getCentralMoment(2, method, nMax);
         if (v < 0)
@@ -949,10 +958,10 @@ namespace Pda {
         return v;
     }
 
-/**
- * Determins the moment coefficient of skewness.
- * @returns Skewness = getCentralMoment(3)/getCentralMoment(2)^(3/2)
- */
+    /**
+     * Determins the moment coefficient of skewness.
+     * @returns Skewness = getCentralMoment(3)/getCentralMoment(2)^(3/2)
+     */
     pdaValueType PDV::getSkewness(const MomentMethod method, const size_t nMax) const {
         auto centralMoments = this->getCentralMoments(3, method, nMax);
         if (centralMoments[2] <= 0)
@@ -960,10 +969,10 @@ namespace Pda {
         return centralMoments[3] / ::pow(centralMoments[2], 1.5);
     }
 
-/**
- * Determins the kurtosis.
- * @returns Kurtosis = getCentralMoment(4)/getCentralMoment(2)^2-3
- */
+    /**
+     * Determins the kurtosis.
+     * @returns Kurtosis = getCentralMoment(4)/getCentralMoment(2)^2-3
+     */
     pdaValueType PDV::getExcessKurtosis(MomentMethod method, size_t nMax) const {
         auto centralMoments = this->getCentralMoments(4, method, nMax);
         if (centralMoments[2] <= 0)
@@ -971,22 +980,22 @@ namespace Pda {
         return centralMoments[4] / ::pow(centralMoments[2], 2) - 3;
     }
 
-/**
- * Determins the mean (expactancy) value.
- * Same as value.getMean().
- * @returns  Mean value
- * @see getMean()
- */
+    /**
+     * Determins the mean (expactancy) value.
+     * Same as value.getMean().
+     * @returns  Mean value
+     * @see getMean()
+     */
     pdaValueType E(const PDV& value, const MomentMethod method, const size_t nMax){
         return value.getMean(method, nMax);
     }
 
-/**
- * Determins the variance.
- * Same as value.getVariance().
- * @returns Variance = getCentralMoment(2)
- * @see getVariance()
- */
+    /**
+     * Determins the variance.
+     * Same as value.getVariance().
+     * @returns Variance = getCentralMoment(2)
+     * @see getVariance()
+     */
     pdaValueType Var(const PDV& value, const MomentMethod method, const size_t nMax){
         return value.getVariance(method, nMax);
     }
@@ -1034,7 +1043,7 @@ namespace Pda {
      * @param nMax MonteCarloSamples: Sample number, MonteCarloTime: Max clocks (CLOCKS_PER_SECOND * second)
      * @returns Value of the raw moment
      */
-        pdaValueType PDV::getRawMomentUnscaled(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
+    pdaValueType PDV::getRawMomentUnscaled(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         pdaValueType dMoment = 0;
         if (method == MomentMethod::Auto ||
             method == MomentMethod::Full) {
@@ -1132,12 +1141,12 @@ namespace Pda {
         return dMoment;
     }
 
-/** 
- * Calculates the first raw moments.
- * @param nMaxOrder Order of the highest raw moment to determine.
- * @param method
- * @param nMaxT Meaning depends on MomentMethod
- */
+    /**
+     * Calculates the first raw moments.
+     * @param nMaxOrder Order of the highest raw moment to determine.
+     * @param method
+     * @param nMaxT Meaning depends on MomentMethod
+     */
     std::vector<pdaValueType> PDV::getRawMoments(const size_t nMaxOrder, const MomentMethod method, const size_t nMax) const {
         assert(nMaxOrder <= 4);
         std::vector<pdaValueType> aMoments(nMaxOrder+1);
@@ -1213,11 +1222,11 @@ namespace Pda {
         return aMoments;
     }
 
-/** 
- * Calculates the nOrder'th central moment.
- * @param nOrder Order of the central moment to calculate. Order <= 4.
- * @returns Value of the central moment
- */
+    /**
+     * Calculates the nOrder'th central moment.
+     * @param nOrder Order of the central moment to calculate. Order <= 4.
+     * @returns Value of the central moment
+     */
     pdaValueType PDV::getCentralMoment(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         assert(nOrder <= 4);
 
@@ -1230,10 +1239,10 @@ namespace Pda {
             return 0;
         if (nOrder == 2)
             return aRawMoments[2] - aRawMoments[1]*aRawMoments[1];
-            //return aRawMoments[2] - ::pow(aRawMoments[1], 2);
+        //return aRawMoments[2] - ::pow(aRawMoments[1], 2);
         if (nOrder == 3)
             return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * aRawMoments[1]*aRawMoments[1]*aRawMoments[1];
-            //return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * ::pow(aRawMoments[1], 3);
+        //return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * ::pow(aRawMoments[1], 3);
         if (nOrder == 4) {
             pdaValueType m12 = aRawMoments[1] * aRawMoments[1];
             return aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3] + 6 * m12 * aRawMoments[2] -
@@ -1243,11 +1252,11 @@ namespace Pda {
         return 0;
     }
 
-/** 
- * Calculates the first central moments.
- * Exceptionally, the first moment is set to the first raw moment (expected value), not zero!
- * @param nMaxOrder Order of the highest raw moment to determine.
- */
+    /**
+     * Calculates the first central moments.
+     * Exceptionally, the first moment is set to the first raw moment (expected value), not zero!
+     * @param nMaxOrder Order of the highest raw moment to determine.
+     */
     std::vector<pdaValueType> PDV::getCentralMoments(const size_t nMaxOrder, const MomentMethod method, const size_t nMax) const {
         assert(nMaxOrder <= 4);
         std::vector<pdaValueType> aMoments(nMaxOrder+1);
@@ -1266,13 +1275,13 @@ namespace Pda {
         return aMoments;
     }
 
-/** 
- * Determins the sensitivity or partial derivative 
- * with respect to \f[\Delta_{\mbox{nDeltaNumber}}\f].
- * @param nDeltaNumber Index of the Delta Symbol.
- * The index of the first symbol is 0.
- * @returns Sensitivity value
- */
+    /**
+     * Determins the sensitivity or partial derivative
+     * with respect to \f[\Delta_{\mbox{nDeltaNumber}}\f].
+     * @param nDeltaNumber Index of the Delta Symbol.
+     * The index of the first symbol is 0.
+     * @returns Sensitivity value
+     */
     pdaValueType PDV::getSensitivity(const size_t nDeltaNumber){
         std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
         for (size_t i = 0; i < m_pda.getNumberOfDeltas(); ++i)
@@ -1282,11 +1291,11 @@ namespace Pda {
         return sensitivity;
     }
 
-/**
- * drawSamples
- * @param sampleCount
- * @return
- */
+    /**
+     * drawSamples
+     * @param sampleCount
+     * @return
+     */
     std::vector<pdaValueType> PDV::drawSamples(size_t sampleCount) {
         assert (m_pda.getOrder() > 0);
         std::vector<pdaValueType> r(sampleCount);
@@ -1316,12 +1325,12 @@ namespace Pda {
         return r;
     }
 
-/**
- * Returns a vector of CDF function points
- * @param pointCount
- * @param averagingCount
- * @return Vector of x/CDF(x) pairs
- */
+    /**
+     * Returns a vector of CDF function points
+     * @param pointCount
+     * @param averagingCount
+     * @return Vector of x/CDF(x) pairs
+     */
     std::vector<std::pair<pdaValueType, pdaValueType>> PDV::estimateCDF(size_t pointCount, size_t averagingCount) {
         std::vector<std::pair<pdaValueType, pdaValueType>> r(pointCount, {0,0});
         std::vector<pdaValueType> s = this->drawSamples(pointCount * averagingCount);
@@ -1337,13 +1346,13 @@ namespace Pda {
         return r;
     }
 
-/**
- * Returns a vector of PDF function points
- * @param x
- * @param pointCount
- * @param averagingCount
- * @return Vector of x/PDF(x) pairs
- */
+    /**
+     * Returns a vector of PDF function points
+     * @param x
+     * @param pointCount
+     * @param averagingCount
+     * @return Vector of x/PDF(x) pairs
+     */
     std::vector<std::pair<pdaValueType, pdaValueType>> PDV::estimatePDF(size_t pointCount, size_t averagingCount) {
         std::vector<std::pair<pdaValueType, pdaValueType>> r(pointCount, {0,0});
         auto cdf = this->estimateCDF(pointCount+1, averagingCount);
@@ -1366,30 +1375,30 @@ namespace Pda {
         return E(value1 * value2, method, nMax) - E(value1) * E(value2, method, nMax);
     }
 
-/** 
- * Determins the statistical correlation.
- * \f[Cor(X,Y)=\frac{Cov(X,Y)}{sqrt(Var(X))sqrt(Var(Y))}\f]
- * @returns Correlation of value1 and value2
- */
+    /**
+     * Determins the statistical correlation.
+     * \f[Cor(X,Y)=\frac{Cov(X,Y)}{sqrt(Var(X))sqrt(Var(Y))}\f]
+     * @returns Correlation of value1 and value2
+     */
     pdaValueType Cor(const PDV& value1,
                      const PDV& value2,
                      const MomentMethod method, const size_t nMax){
         return Cov(value1, value2, method, nMax) / ::sqrt(Var(value1, method, nMax) * Var(value2, method, nMax));
     }
 
-/** 
- * Operator [ostream] << [PDV]
- */
+    /**
+     * Operator [ostream] << [PDV]
+     */
     std::ostream& operator<<(std::ostream& os,
                              const PDV& value){
         value.dump(os);
         return os;
     }
 
-/** 
- * Dumps the PDV as a sum of all Delta symbol products
- * @param os Stream to wich the dump is done.
- */
+    /**
+     * Dumps the PDV as a sum of all Delta symbol products
+     * @param os Stream to wich the dump is done.
+     */
     void PDV::dump(std::ostream &os) const {
         Util::PowersIterator pi(m_pda, 1, m_pda.getOrder());
         do{
@@ -1413,9 +1422,9 @@ namespace Pda {
         //os << endl;
     }
 
-/** 
- * Sets small coefficient to zero
- */
+    /**
+     * Sets small coefficient to zero
+     */
     void PDV::clean() {
         static const pdaValueType epsilon = 1e-14;
         Util::PowersIterator pi(m_pda, 1);
@@ -1425,9 +1434,9 @@ namespace Pda {
         } while (pi.next());
     }
 
-/** 
- * Check
- */
+    /**
+     * Check
+     */
     void PDV::check() {
         Util::PowersIterator pi(m_pda, 1);
         do {

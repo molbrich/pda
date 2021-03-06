@@ -1,6 +1,16 @@
-// pda_util.cpp
-// Probability DeltaDistribution Arithmetic
-// (c) Markus Olbrich
+/**
+ * pda_util.cpp
+ * Probability Distribution Arithmetic
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include "pda_pda.h"
 #include "pda_powersiterator.h"
@@ -38,16 +48,16 @@ namespace Pda {
         return res;
     }
 
-/**
- * Monte Carlo simulation
- * @param x Argument
- * @param aMoments Place for moments to return
- * @param function Function that is to simulate
- * @param nSampleNumber Number of samples
- * @returns aMoments[2..4] The first central moments. 
- *          aMoments[0] is the 1st raw moment (mean).
- * @note Assumes standard normal distributed Delta symbols.
- */
+    /**
+     * Monte Carlo simulation
+     * @param x Argument
+     * @param aMoments Place for moments to return
+     * @param function Function that is to simulate
+     * @param nSampleNumber Number of samples
+     * @returns aMoments[2..4] The first central moments.
+     *          aMoments[0] is the 1st raw moment (mean).
+     * @note Assumes standard normal distributed Delta symbols.
+     */
     std::vector<pdaValueType> Util::monteCarlo(PDV x,
                                                pdaValueType (*function)(pdaValueType argument),
                                                size_t nSampleNumber) {

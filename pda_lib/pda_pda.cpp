@@ -1,6 +1,16 @@
-// pda_pda.cpp
-// Probability DeltaDistribution Arithmetic
-// (c) Markus Olbrich
+/**
+ * pda_pda.cpp
+ * Probability Distribution Arithmetic
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #include "pda_pda.h"
 #include <cassert>
@@ -54,54 +64,54 @@ namespace Pda {
         assert(m_nNumberOfPDVInstances == 0);
     }
 
-/**
- * Sets the moments of a Delta symbol according to a
- * standard normal distribution with given deviation.
- * @param nDelta Index of the Delta symbol.
- * The index of the first symbol is 0.
- * @param variance Given deviation of distribution
- */
+    /**
+     * Sets the moments of a Delta symbol according to a
+     * standard normal distribution with given deviation.
+     * @param nDelta Index of the Delta symbol.
+     * The index of the first symbol is 0.
+     * @param variance Given deviation of distribution
+     */
     void PDA::setDeltaAsNormal(size_t nDelta,
                                pdaValueType variance) {
         setDeltaDistribution(nDelta, Util::NormalDistribution(sqrt(variance)));
     }
 
-/**
- * Determines a single raw moment of a Delta symbol.
- * @param nDelta Index of the delta symbol.
- * The index of the first symbol is 0.
- * @param nMoment Order of the central moment
- * @returns Value of the moment
- */
+    /**
+     * Determines a single raw moment of a Delta symbol.
+     * @param nDelta Index of the delta symbol.
+     * The index of the first symbol is 0.
+     * @param nMoment Order of the central moment
+     * @returns Value of the moment
+     */
     pdaValueType PDA::getDeltaMoment(size_t nDelta,
                                      size_t nMoment) {
         return m_deltaDistributions[nDelta]->getMoment(nMoment);
     }
 
-/**
- * Sets the name of a delta symbol.
- * @param nDelta
- * @param name
- */
+    /**
+     * Sets the name of a delta symbol.
+     * @param nDelta
+     * @param name
+     */
     void PDA::setDeltaName(const size_t nDelta, const std::string &name) {
         m_deltaNames[nDelta] = name;
     }
 
-/**
- * Gets the name of a delta symbol.
- * @param nDelta
- * @return Name of the delta symbol
- */
+    /**
+     * Gets the name of a delta symbol.
+     * @param nDelta
+     * @return Name of the delta symbol
+     */
     std::string PDA::getDeltaName(const size_t nDelta) {
         return m_deltaNames[nDelta];
     }
 
     namespace Util {
 
-/**
- * Calculates raw moments of the normal distribution
- * @return Vector of moments
- */
+    /**
+     * Calculates raw moments of the normal distribution
+     * @return Vector of moments
+     */
         std::vector<pdaValueType> NormalDistribution::calculateMoments() const {
             size_t nMaxMoment = 16;
             std::vector<pdaValueType> moments(nMaxMoment + 1);
@@ -148,10 +158,10 @@ namespace Pda {
             return moments;
         }
 
-/**
- * Calculate raw moments of the log normal distribution
- * @return Vector of moments
- */
+        /**
+         * Calculate raw moments of the log normal distribution
+         * @return Vector of moments
+         */
         std::vector<pdaValueType> LogNormalDistribution::calculateMoments() const {
             size_t nMaxMoment = 16;
             std::vector<pdaValueType> moments(nMaxMoment + 1);

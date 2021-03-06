@@ -1,7 +1,17 @@
-// test.cpp
-// Checks the functions of the distribution arithmetics
+/**
+ * test.cpp
+ * Tests functions of the distribution arithmetic
+ * (c) Markus Olbrich
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-//#include "pda_lib.h"
 #include "pda_pda.h"
 #include "pda_pdv.h"
 #include "pda_matrix.h"
@@ -479,11 +489,11 @@ void testMoments() {
     }
     for (size_t nOrder = 0; nOrder <= 4; ++nOrder) {
         PDA pda(nOrder, 1);
+        // Standard normal distribution:
         pdaValueType xNom = 0;
         PDV x(pda, xNom);
         x.setDeltaCoeff(0, 1);
         {
-            // Standard normal distribution:
             pdaValueType expectedMean = 0;
             pdaValueType expectedDeviation = 1;
             pdaValueType expectedSkewness = 0;
@@ -583,6 +593,27 @@ void testMoments() {
                 assert(PDV::similar(skewness, expectedSkewness));
                 assert(PDV::similar(kurtosis, expectedKurtosis));
             }
+        }
+
+        // Numerical problems
+        {
+            auto rawMomentsSND = x.getRawMoments(4, MomentMethod::Full);
+            pdaValueType factor = 1e-10;
+            PDV y (x*factor);
+
+            std::vector<pdaValueType> rawMoments = y.getRawMoments(4, MomentMethod::Full);
+            pdaValueType correction = 1.0;
+            for (pdaValueType& moment: rawMoments) {
+                moment /= correction;
+                correction *= factor;
+            }
+#if false
+            std::cout << "Raw Moments with " << nOrder << ". order PDA" << std::endl;
+            for (size_t i = 0; i <=4 ; ++i) {
+                std::cout << "Corrected " << i << ". raw moment: " << rawMoments[i]
+                << " (correct: " << rawMomentsSND[i] << ")" << std::endl;
+            }
+#endif
         }
     }
 
