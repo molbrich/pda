@@ -16,9 +16,9 @@
 
 namespace Pda {
 
-/** Type of real numbers inside PDV */
+    /** Type of real numbers inside PDV */
     using pdaValueType = double;
-/** Forward declarations */
+    /** Forward declarations */
     class PDA;
     class PDV;
     namespace Util {
@@ -31,26 +31,26 @@ namespace Pda {
                 size_t nSampleNumber);
     }
 
-/**
- * @class PDA
- * @brief Probability DeltaDistribution Arithmetic
- * @author Markus Olbrich
- *
- * This class implements a distribution arithmetic.
- *
- * There is a fixed number of Delta symbols which represent
- * the source of any variation.
- * Delta symbols are random variables.
- * Their distribution is given by the central moments
- * of their PDF (probability density function).
- * The mean (or expectancy value) of each Delta symbol is zero.
- *
- * Each PDV is a sum of weighted Delta symbols (BRVs).
- * PDVs can be used like normal float or double values
- * including arithmetic operations.
- * At any time, the nominal value, the mean value (expectancy value)
- * and central moments of the PDF of a PDV can be calculated.
- */
+    /**
+     * @class PDA
+     * @brief Probability DeltaDistribution Arithmetic
+     * @author Markus Olbrich
+     *
+     * This class implements a distribution arithmetic.
+     *
+     * There is a fixed number of Delta symbols which represent
+     * the source of any variation.
+     * Delta symbols are random variables.
+     * Their distribution is given by the central moments
+     * of their PDF (probability density function).
+     * The mean (or expectancy value) of each Delta symbol is zero.
+     *
+     * Each PDV is a sum of weighted Delta symbols (BRVs).
+     * PDVs can be used like normal float or double values
+     * including arithmetic operations.
+     * At any time, the nominal value, the mean value (expectancy value)
+     * and central moments of the PDF of a PDV can be calculated.
+     */
     class PDA
     {
     private:
@@ -107,19 +107,25 @@ namespace Pda {
                 size_t nSampleNumber);
     };
 
-/**
- * Calculates the position inside the m_aCoeff array
- * depending on the Delta symbol powers
- * @param aPowers Array of Delta symbol powers
- * @return Corresponding index inside m_aCoeff
- */
+    /**
+     * Calculates the position inside the m_aCoeff array
+     * depending on the Delta symbol powers.
+     * This function is O(n) with the number n of BRVs.
+     * (Even if it does not look like that.
+     * The reason is that the sum of the indices is <= order
+     * which is limited by 4).
+     * @param aPowers Array of Delta symbol powers
+     * @return Corresponding index inside m_aCoeff
+     */
     size_t PDA::calcCoeffPos(const std::vector<size_t>& aPowers) const {
         size_t nPos = 0;
         size_t l = this->getOrder();
-        for (size_t nDelta = this->getNumberOfDeltas(); nDelta > 0; --nDelta) {
-            size_t actualNDelta = nDelta - 1;
-            for (size_t m = 0; m < aPowers[actualNDelta]; ++m){
-                nPos += this->getBinCoeff(actualNDelta + l, l);
+        size_t nDelta = this->getNumberOfDeltas();
+        while (nDelta > 0) {
+            --nDelta;
+            for (size_t m = 0; m < aPowers[nDelta]; ++m){
+                nPos += this->getBinCoeff(nDelta + l, l);
+                assert(l>0);
                 --l;
             }
         }
@@ -130,9 +136,9 @@ namespace Pda {
         static std::random_device PDA_randomDevice;
         static std::mt19937 PDA_randomGen(Util::PDA_randomDevice());
 
-/**
- * Base class for BRV distributions
- */
+        /**
+         * Base class for BRV distributions
+         */
         class DeltaDistribution {
         protected:
             std::vector<pdaValueType> moments;
@@ -146,41 +152,43 @@ namespace Pda {
         };
 
 
-/**
- * Normal distribution
- * \f[\mbox{PDF}=\frac{1}{\sigma \sqrt{2\pi}}e^{-\frac{1}{2}(\frac{x-\mu}{\sigma})^2}\f]
- * \f[\mu = \mbox{m}, \sigma = \mbox{s}\f]
- */
+        /**
+         * Normal distribution
+         * \f[\mbox{PDF}=\frac{1}{\sigma \sqrt{2\pi}}e^{-\frac{1}{2}(\frac{x-\mu}{\sigma})^2}\f]
+         * \f[\mu = \mbox{m}, \sigma = \mbox{s}\f]
+         */
         class NormalDistribution: public DeltaDistribution {
         private:
             pdaValueType m = 0; // mu
             pdaValueType s = 1; // sigma
             std::normal_distribution<> dist;
+            std::vector<pdaValueType> calculateMoments() const;
         public:
             pdaValueType drawSample() override { return dist(Util::PDA_randomGen); };
-            std::vector<pdaValueType> calculateMoments() const;
-            explicit NormalDistribution(pdaValueType s): s(s), dist(m, s) {
+            explicit NormalDistribution(pdaValueType s = 1): s(s), dist(m, s) {
                 moments = calculateMoments();  };
         };
 
-/**
- * Log normal distribution
- * Let \f$Z\f$ be standard normal distributed.
- * Then the distribution of \f$X=\exp^{\mu + \sigma Z}\f$ is log normal distributed.
- * The parameters of the distribution are \f$\mbox{m} = \mu\f$ and \f$\mbox{s} = \sigma\f$.
- * Since the expected value of a BRV distribution is expected to be zero,
- * the log normal distribution is moved by the offset \f$\exp^{\mu + \frac{\sigma^2}{2}}\f$ to the left.
- */
+        /**
+         * Log normal distribution
+         * Let \f$Z\f$ be standard normal distributed.
+         * Then the distribution of \f$X=\exp^{\mu + \sigma Z}\f$ is log normal distributed.
+         * The parameters of the distribution are \f$\mbox{m} = \mu\f$ and \f$\mbox{s} = \sigma\f$.
+         * Since the expected value of a BRV distribution is expected to be zero,
+         * the log normal distribution is moved by the offset \f$\exp^{\mu + \frac{\sigma^2}{2}}\f$ to the left.
+         */
         class LogNormalDistribution: public DeltaDistribution {
         private:
             pdaValueType m = 0; // mu
             pdaValueType s = 1; // sigma
             pdaValueType offset;
             std::lognormal_distribution<> dist;
+            std::vector<pdaValueType> calculateMoments() const;
         public:
             pdaValueType drawSample() override { return dist(Util::PDA_randomGen)-offset; };
-            std::vector<pdaValueType> calculateMoments() const;
-            LogNormalDistribution(pdaValueType m, pdaValueType s): m(m), s(s), offset(::exp(m+s*s/2)), dist(m, s) { moments = calculateMoments(); };
+            explicit LogNormalDistribution(pdaValueType m = 0, pdaValueType s = 1):
+                    m(m), s(s), offset(::exp(m+s*s/2.0)), dist(m, s)
+            { moments = calculateMoments(); };
             pdaValueType getOffset() const { return offset; };
         };
 

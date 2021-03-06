@@ -377,7 +377,7 @@ namespace Pda {
 /** 
  * Calculating assignment operator. [PDV] -= [PDV]
  */
-    PDV & PDV::operator-=(const PDV & P){
+    PDV& PDV::operator-=(const PDV& P){
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             m_aCoeff[i] -= P.m_aCoeff[i];
         return *this;
@@ -386,7 +386,7 @@ namespace Pda {
 /** 
  * Calculating assignment operator. [PDV] -= [pdaValueType]
  */
-    PDV & PDV::operator-=(const pdaValueType d){
+    PDV& PDV::operator-=(const pdaValueType d){
         m_aCoeff[0] -= d;
         return *this;
     }
@@ -407,16 +407,17 @@ namespace Pda {
 /** 
  * Operator [PDV] * [pdaValueType]
  */
-    PDV operator*(const PDV& x, pdaValueType d) {
-        PDV temp{x.m_pda};
-        for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
-            temp.m_aCoeff[i] = x.m_aCoeff[i] * d;
+    PDV operator*(const PDV& x, const pdaValueType d) {
+        PDV temp{x};
+        assert(x.m_aCoeff.size() == x.m_pda.getNumberOfCoeffs());
+        for (auto& coeff: temp.m_aCoeff)
+            coeff *= d;
         return temp;
     }
 /**
  * Operator [PDV] * [pdaValueType]
  */
-    PDV operator*(PDV&& x, pdaValueType d) {
+    PDV operator*(PDV&& x, const pdaValueType d) {
         assert(x.m_aCoeff.size() == x.m_pda.getNumberOfCoeffs());
         for (auto& coeff: x.m_aCoeff)
             coeff *= d;
@@ -484,7 +485,7 @@ namespace Pda {
 /** 
  * Calculating assignment operator. [PDV] /= [PDV]
  */
-    PDV & PDV::operator/=(const PDV & P) {
+    PDV& PDV::operator/=(const PDV& P) {
         *this = *this / P;
         return *this;
     }
@@ -917,7 +918,7 @@ namespace Pda {
  * Determins the nominal value.
  * @returns Nominal value
  */
-    pdaValueType PDV::getNom(void) const {
+    pdaValueType PDV::getNom() const {
         return m_aCoeff[0];
     }
 
@@ -935,7 +936,7 @@ namespace Pda {
  * @returns Standard deviation
  */
     pdaValueType PDV::getStandardDeviation(const MomentMethod method, const size_t nMax) const {
-        return std::sqrt(getCentralMoment(2, method, nMax));
+        return std::sqrt(getVariance(method, nMax));
     }
 
 /**
@@ -943,7 +944,10 @@ namespace Pda {
  * @returns Variance = getCentralMoment(2)
  */
     pdaValueType PDV::getVariance(const MomentMethod method, const size_t nMax) const {
-        return getCentralMoment(2, method, nMax);
+        pdaValueType v = getCentralMoment(2, method, nMax);
+        if (v < 0)
+            v = 0;
+        return v;
     }
 
 /**
@@ -952,7 +956,7 @@ namespace Pda {
  */
     pdaValueType PDV::getSkewness(const MomentMethod method, const size_t nMax) const {
         auto centralMoments = this->getCentralMoments(3, method, nMax);
-        if (centralMoments[2] == 0)
+        if (centralMoments[2] <= 0)
             return 0;
         return centralMoments[3] / ::pow(centralMoments[2], 1.5);
     }
@@ -963,7 +967,7 @@ namespace Pda {
  */
     pdaValueType PDV::getExcessKurtosis(MomentMethod method, size_t nMax) const {
         auto centralMoments = this->getCentralMoments(4, method, nMax);
-        if (centralMoments[2] == 0)
+        if (centralMoments[2] <= 0)
             return 0;
         return centralMoments[4] / ::pow(centralMoments[2], 2) - 3;
     }
@@ -998,18 +1002,18 @@ namespace Pda {
     pdaValueType PDV::getRawMoment(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         pdaValueType dMoment = 0;
         if (method == MomentMethod::Auto ||
-            method == MomentMethod::FullMoments) {
+            method == MomentMethod::Full) {
             if (nOrder == 0)
                 return 1;
             Util::PowersIterator pi(m_pda, nOrder, nOrder * m_pda.getOrder());
             do {
                 pdaValueType dAddend = 1;
-                std::vector<size_t> &aPositions = pi.getPositions();
+                std::vector<size_t>& aPositions = pi.getPositions();
                 for (size_t nFactor = 0; nFactor < nOrder; ++nFactor) {
                     dAddend *= m_aCoeff[aPositions[nFactor]];
                 }
                 if (similar(dAddend, 0)) continue;
-                std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
+                std::vector<size_t>& aFactorsPowersSum = pi.getFactorsPowersSum();
                 for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
                     dAddend *= m_pda.getDeltaMoment(nDelta, aFactorsPowersSum[nDelta]);
                 }
@@ -1102,7 +1106,7 @@ namespace Pda {
     std::vector<pdaValueType> PDV::getRawMoments(const size_t nMaxOrder, const MomentMethod method, const size_t nMax) const {
         assert(nMaxOrder <= 4);
         std::vector<pdaValueType> aMoments(nMaxOrder+1);
-        if (method == MomentMethod::FullMoments || method == MomentMethod::Auto)
+        if (method == MomentMethod::Full || method == MomentMethod::Auto)
             for (size_t nOrder = 0; nOrder <= nMaxOrder; ++nOrder) {
                 size_t nMaxTotalPowersSum = (nMax == 0 ? std::max(m_pda.getOrder() * nOrder, nOrder) : nMax);
                 aMoments[nOrder] = getRawMoment(nOrder, method, nMaxTotalPowersSum);
@@ -1185,25 +1189,21 @@ namespace Pda {
         std::vector<pdaValueType> aRawMoments;
         if (nOrder > 1)
             aRawMoments = getRawMoments(nOrder, method, nMax);
-
-        switch (nOrder) {
-            case 0:
-                return 1;
-                break;
-            case 1:
-                return 0;
-                break;
-            case 2:
-                return aRawMoments[2] - ::pow(aRawMoments[1], 2);
-                break;
-            case 3:
-                return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * ::pow(aRawMoments[1], 3);
-                break;
-            case 4:
-                return aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3] + 6 * ::pow(aRawMoments[1], 2) * aRawMoments[2] - 3 * ::pow(aRawMoments[1], 4);
-                break;
-            default:
-                break;
+        if (nOrder == 0)
+            return 1;
+        if (nOrder == 1)
+            return 0;
+        if (nOrder == 2)
+            return aRawMoments[2] - aRawMoments[1]*aRawMoments[1];
+            //return aRawMoments[2] - ::pow(aRawMoments[1], 2);
+        if (nOrder == 3)
+            return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * aRawMoments[1]*aRawMoments[1]*aRawMoments[1];
+            //return aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * ::pow(aRawMoments[1], 3);
+        if (nOrder == 4) {
+            pdaValueType m12 = aRawMoments[1] * aRawMoments[1];
+            return aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3] + 6 * m12 * aRawMoments[2] -
+                   3 * m12 * m12;
+            //return aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3] + 6 * ::pow(aRawMoments[1], 2) * aRawMoments[2] - 3 * ::pow(aRawMoments[1], 4);
         }
         return 0;
     }

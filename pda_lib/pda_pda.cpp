@@ -126,19 +126,24 @@ namespace Pda {
                 }
                 moments[k] = moment;
             }
-#if false
+#ifndef NDEBUG
             std::vector<pdaValueType> check = {
-                1,
-                m,
-                pow(m,2)+pow(s,2),
-                pow(m,3)+3*m*pow(s,2),
-                pow(m,4)+6*pow(m,2)+3*pow(s, 4),
-                pow(m,5)+10*pow(m,3)*pow(s,2)+15*m*pow(s,4),
-                pow(m,6)+15*pow(m,4)*pow(s,2)+45*pow(m,2)*pow(s,4)+15*pow(s,6),
-                pow(m,7)+21*pow(m,5)*pow(s,2)+105*pow(m,3)*pow(s,4)+105*m*pow(s,6),
-                pow(m,8)+28*pow(m,6)*pow(s,2)+210*pow(m,4)*pow(s,4)+420*pow(m,2)*pow(s,6)+105*pow(s, 8)};
-        for (size_t i=0; i<check.size(); ++i)
-            assert(moments[i] == check[i]);
+                    1,
+                    m,
+                    pow(m,2)+pow(s,2),
+                    pow(m,3)+3*m*pow(s,2),
+                    pow(m,4)+6*pow(m,2)+3*pow(s, 4),
+                    pow(m,5)+10*pow(m,3)*pow(s,2)+15*m*pow(s,4),
+                    pow(m,6)+15*pow(m,4)*pow(s,2)+45*pow(m,2)*pow(s,4)+15*pow(s,6),
+                    pow(m,7)+21*pow(m,5)*pow(s,2)+105*pow(m,3)*pow(s,4)+105*m*pow(s,6),
+                    pow(m,8)+28*pow(m,6)*pow(s,2)+210*pow(m,4)*pow(s,4)+420*pow(m,2)*pow(s,6)+105*pow(s, 8)};
+            for (size_t i=0; i<check.size(); ++i)
+                assert(moments[i] == check[i]);
+#if false
+            std::cout << "Moments of normal distribution N(" << this->m << ", " << this->s << ")" << std::endl;
+            for (size_t i = 0; i<moments.size(); ++i)
+                std::cout << i << ": " << moments[i] << std::endl;
+#endif
 #endif
             return moments;
         }
@@ -153,19 +158,26 @@ namespace Pda {
             std::vector<pdaValueType> shiftedMoments(nMaxMoment + 1);
             // non shifted distribution:
             for (size_t n = 0; n <= nMaxMoment; ++n)
-                moments[n] = exp(static_cast<pdaValueType>(n) * m + static_cast<pdaValueType >(n * n) * s * s / 2);
-            auto int_pow = [] (pdaValueType x, unsigned n) -> pdaValueType {
+                moments[n] = exp(static_cast<pdaValueType>(n) * m + static_cast<pdaValueType >(n * n) * s * s / 2.0);
+            auto intPow = [] (pdaValueType x, size_t n) -> pdaValueType {
                 pdaValueType r = 1;
-                for (unsigned i=1; i<=n; ++i)
+                for (size_t i=0; i<n; ++i)
                     r *= x;
-                return x;
+                return r;
             };
+
             // shifted distribution:
             for (size_t n = 0; n <= nMaxMoment; ++n) {
                 shiftedMoments[n] = 0;
-                for (size_t i = 0; i <= n; ++i)
-                    shiftedMoments[n] += static_cast<pdaValueType>(Util::getBinCoeff(n, i)) * moments[i] * int_pow(getOffset(), static_cast<unsigned>(n - i));
+                for (size_t k = 0; k <= n; ++k) {
+                    shiftedMoments[n] += static_cast<pdaValueType>(Util::getBinCoeff(n, k)) * intPow(-getOffset(), n-k)  * moments[k];
+                }
             }
+#if false
+            std::cout << "Moments of log normal distribution LN(" << this->m << ", " << this->s << ")" << std::endl;
+            for (size_t i = 0; i<moments.size(); ++i)
+                std::cout << i << ": " << shiftedMoments[i] << " (non-shifted: " << moments[i] << ")" << std::endl;
+#endif
             return shiftedMoments;
         }
 

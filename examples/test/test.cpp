@@ -113,6 +113,7 @@ void testPowersIterator() {
         Util::PowersIterator pi(pda, 2);
         checkPowersIterator(pi, 4356);
     }
+    return;
     {
         PDA pda(2, 10);
         Util::PowersIterator pi(pda, 2, 1);
@@ -245,7 +246,9 @@ void testFundamentals() {
         // Simple *
         {
             PDV x{pda, 3};
+            x.setDeltaCoeff(0, 0.1);
             PDV y{pda, 2};
+            y.setDeltaCoeff(0, 0.2);
 
             assert(y.getNom() == 2);
             x = x * y;
@@ -263,6 +266,8 @@ void testFundamentals() {
             assert(0.5 * x * y == (x * y) / 2);
             assert(2 / x == 2 * 1 / x);
             assert((x / y) / (x * z) == x / y / x / z);
+            assert(2 * (x * 3) == (x * 2) * 3);
+            assert(x * 1E-6 * 1E-5 == x * 1E-11);
         }
         // Simple /
         {
@@ -316,17 +321,6 @@ void testFundamentals() {
                 assert(x == y);
             }
         }
-    }
-    {
-        PDA pda(4,1);
-        pda.setDeltaAsNormal(0,2);
-        PDV x(pda);
-        x.setNom(3);
-        x.setDeltaCoeff(0,1.5);
-        assert(x.getMean() == 3);
-        assert(x.getStandardDeviation() == std::sqrt(x.getVariance()));
-        //std::cout << x.getVariance() << std::endl;
-        assert(x.getVariance() == 4.5);
     }
 }
 
@@ -472,8 +466,126 @@ void testMaths() {
 
 void testMoments() {
     const pdaValueType epsilon = 1E-9;
+    {
+        PDA pda(4,1);
+        pda.setDeltaAsNormal(0,2);
+        PDV x(pda);
+        x.setNom(3);
+        x.setDeltaCoeff(0,1.5);
+        assert(x.getMean() == 3);
+        assert(x.getStandardDeviation() == std::sqrt(x.getVariance()));
+        //std::cout << x.getVariance() << std::endl;
+        assert(x.getVariance() == 4.5);
+    }
+    for (size_t nOrder = 0; nOrder <= 4; ++nOrder) {
+        PDA pda(nOrder, 1);
+        pdaValueType xNom = 0;
+        PDV x(pda, xNom);
+        x.setDeltaCoeff(0, 1);
+        {
+            // Standard normal distribution:
+            pdaValueType expectedMean = 0;
+            pdaValueType expectedDeviation = 1;
+            pdaValueType expectedSkewness = 0;
+            pdaValueType expectedKurtosis = 0;
+            // Exact:
+            pdaValueType mean = x.getMean(MomentMethod::Full);
+            pdaValueType deviation = x.getStandardDeviation(MomentMethod::Full);
+            pdaValueType skewness = x.getSkewness(MomentMethod::Full);
+            pdaValueType kurtosis = x.getExcessKurtosis(MomentMethod::Full);
+#if false
+            std::cout << "x " << nOrder << ". Order" << std::endl;
+            std::cout << "Mean: " << mean << " (expected: " << expectedMean << ")" << std::endl;
+            std::cout << "Standard deviation: " << deviation << " (expected: " << expectedDeviation << ")" << std::endl;
+            std::cout << "Skewness: " << skewness << " (expected: " << expectedSkewness << ")" << std::endl;
+            std::cout << "Excess kurtosis: " << kurtosis << " (expected: " << expectedKurtosis << ")" << std::endl;
+#endif
+            assert(mean == expectedMean);
+            if (nOrder > 0) {
+                assert(deviation == expectedDeviation);
+                assert(skewness == expectedSkewness);
+                assert(kurtosis == expectedKurtosis);
+            }
 
-    // FullMoments:
+            // Monte Carlo Samples:
+            size_t sampleCount = 100;
+            mean = x.getMean(MomentMethod::MonteCarloSamples, sampleCount);
+            deviation = x.getStandardDeviation(MomentMethod::MonteCarloSamples, sampleCount);
+            skewness = x.getSkewness(MomentMethod::MonteCarloSamples, sampleCount);
+            kurtosis = x.getExcessKurtosis(MomentMethod::MonteCarloSamples, sampleCount);
+#if false
+            std::cout <<"Monte Carlo Samples:" << nOrder << ". Order" << std::endl;
+            std::cout << "x=" << x << std::endl;
+            std::cout << "Mean: " << mean << " (expected: " << expectedMean << ")" << std::endl;
+            std::cout << "Standard deviation: " << deviation << " (expected: " << expectedDeviation << ")" << std::endl;
+            std::cout << "Skewness: " << skewness << " (expected: " << expectedSkewness << ")" << std::endl;
+            std::cout << "Excess kurtosis: " << kurtosis << " (expected: " << expectedKurtosis << ")" << std::endl;
+#endif
+
+            // Monte Carlo time:
+            size_t time = 0.01 * CLOCKS_PER_SEC;
+            mean = x.getMean(MomentMethod::MonteCarloTime, time);
+            deviation = x.getStandardDeviation(MomentMethod::MonteCarloTime, time);
+            skewness = x.getSkewness(MomentMethod::MonteCarloTime, time);
+            kurtosis = x.getExcessKurtosis(MomentMethod::MonteCarloTime, time);
+#if false
+            std::cout <<"Monte Carlo Time " << nOrder << ". Order" << std::endl;
+            std::cout << "x" << std::endl;
+            std::cout << "Mean: " << mean << std::endl;
+            std::cout << "Standard deviation: " << deviation << std::endl;
+            std::cout << "Skewness: " << skewness << std::endl;
+            std::cout << "Excess kurtosis: " << kurtosis << std::endl;
+#endif
+        }
+        {
+            // Log normal distribution:
+            pdaValueType expectedMean = exp(1.0 / 2.0);
+            pdaValueType expectedDeviation = exp(1.0 / 2.0) * sqrt(exp(1.0) - 1.0);
+            pdaValueType expectedSkewness = (exp(1.0) + 2.0) * sqrt(exp(1.0) - 1.0);
+            pdaValueType expectedKurtosis = 3 + (exp(1.0) - 1) * (exp(3.0) + 3 * exp(2.0) + 6 * exp(1.0) + 6.0) - 3.0;
+
+            // Approximated log normal distribution:
+            PDV y(exp(x));
+            pdaValueType mean = y.getMean(MomentMethod::Full);
+            pdaValueType deviation = y.getStandardDeviation(MomentMethod::Full);
+            pdaValueType skewness = y.getSkewness(MomentMethod::Full);
+            pdaValueType kurtosis = y.getExcessKurtosis(MomentMethod::Full);
+#if false
+            std::cout << "y " << nOrder << ". Order" << std::endl;
+            std::cout << "y=" << y << std::endl;
+            std::cout << "Mean: " << mean << " (expected: " << expectedMean << ")" << std::endl;
+            std::cout << "Standard deviation: " << deviation << " (expected: " << expectedDeviation << ")" << std::endl;
+            std::cout << "Skewness: " << skewness << " (expected: " << expectedSkewness << ")" << std::endl;
+            std::cout << "Excess kurtosis: " << kurtosis << " (expected: " << expectedKurtosis << ")" << std::endl;
+#endif
+
+            // Exact log normal distribution:
+            const Util::LogNormalDistribution logNormal;
+            y = exp(1.0 / 2.0); // Center value
+            y.setDeltaCoeff(0, 1);
+            pda.setDeltaDistribution(0, logNormal);
+            assert(logNormal.getOffset() == exp(1.0 / 2.0));
+            mean = y.getMean(MomentMethod::Full);
+            deviation = y.getStandardDeviation(MomentMethod::Full);
+            skewness = y.getSkewness(MomentMethod::Full);
+            kurtosis = y.getExcessKurtosis(MomentMethod::Full);
+#if false
+            std::cout << "y " << nOrder << ". Order" << std::endl;
+            std::cout << "y=" << y << std::endl;
+            std::cout << "Mean: " << mean << " (expected: " << expectedMean << ")" << std::endl;
+            std::cout << "Standard deviation: " << deviation << " (expected: " << expectedDeviation << ")" << std::endl;
+            std::cout << "Skewness: " << skewness << " (expected: " << expectedSkewness << ")" << std::endl;
+            std::cout << "Excess kurtosis: " << kurtosis << " (expected: " << expectedKurtosis << ")" << std::endl;
+#endif
+            assert(PDV::similar(mean, expectedMean));
+            if (nOrder > 1) {
+                assert(PDV::similar(deviation, expectedDeviation));
+                assert(PDV::similar(skewness, expectedSkewness));
+                assert(PDV::similar(kurtosis, expectedKurtosis));
+            }
+        }
+    }
+
     {
         PDA pda(4, 1);
         PDV x(pda,0);
@@ -521,7 +633,7 @@ void testMoments() {
             PDV x(pda, 0);
             x.setDeltaCoeff(0, 1.0);
             pda.setDeltaDistribution(0, Util::NormalDistribution(1));
-            auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
+            auto m = x.getRawMoments(nOrder, MomentMethod::Full);
             for (size_t i = 0; i < nOrder; ++i) {
                 //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
                 assert(m[i] == pda.getDeltaMoment(0, i));
@@ -533,8 +645,8 @@ void testMoments() {
             PDA pda(nOrder, 1);
             PDV x(pda, 0);
             x.setDeltaCoeff(0, 1.0);
-            pda.setDeltaDistribution(0, Util::LogNormalDistribution(1,1));
-            auto m = x.getRawMoments(nOrder, MomentMethod::FullMoments);
+            pda.setDeltaDistribution(0, Util::LogNormalDistribution(0,1));
+            auto m = x.getRawMoments(nOrder, MomentMethod::Full);
             for (size_t i = 1; i < nOrder; ++i) {
                 //std::cout << m[i] << "\t" << pda.getDeltaMoment(0, i) << std::endl;
                 assert(m[i] == pda.getDeltaMoment(0, i));
@@ -732,13 +844,18 @@ void testMonteCarloEstimations() {
 }
 
 void tests() {
+#if false
     testPowersIterator();
     testFundamentals();
     testMaths();
+#endif
     testMoments();
+#if false
     testCovariance();
     testSensitivity();
     testEquationSystems();
+    testMonteCarloEstimations();
+#endif
 }
 
 int main () {

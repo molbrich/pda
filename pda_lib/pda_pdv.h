@@ -15,13 +15,14 @@ namespace Pda {
 
 /**
  * Type of moment calculation
- * FullMoments: The following optional parameter is the maximal moment order that will be used
+ * Full: The following optional parameter is the maximal moment order that will be used
  * MonteCarlo: The following optional parameter is the number of samples
  * MonteCarloTime: The following optional parameter ist the time in clock ticks (seconds*CLOCKS_PER_SEC)
  */
     enum class MomentMethod {
         Auto,
-        FullMoments,
+        Full,
+        PowerLimit,
         MonteCarloSamples,
         MonteCarloTime
     };
@@ -54,7 +55,7 @@ namespace Pda {
         ~PDV();
 
         // Compare two values for similarity
-        static bool similar(pdaValueType, pdaValueType, pdaValueType = 1e-14);
+        static bool similar(pdaValueType, pdaValueType, pdaValueType = 1e-10);
         bool similar(const PDV&, pdaValueType = 1e-14) const;
         friend bool similar(const PDV&, const PDV&);
 
@@ -172,7 +173,7 @@ namespace Pda {
         friend pdaValueType Cov(const PDV& value1, const PDV& value2, MomentMethod method, size_t nMax);
         friend pdaValueType Cor(const PDV& value1, const PDV& value2, MomentMethod method, size_t nMax);
 
-        // output:
+        // Output:
         friend std::ostream& operator<<(std::ostream& os,
                                         const PDV& value);
         void dump(std::ostream &os) const;
