@@ -1059,7 +1059,7 @@ namespace Pda {
             size_t nMaxTotalPowerSum = nOrder * m_pda.getOrder();
             if (method == MomentMethod::PowerLimit)
                 nMaxTotalPowerSum = nMax;
-#if true
+#if false
             else if (method == MomentMethod::Auto)
                 nMaxTotalPowerSum = 2*nOrder;
 #endif
