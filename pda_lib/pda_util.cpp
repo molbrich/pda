@@ -48,19 +48,41 @@ namespace Pda {
         return res;
     }
 
+    std::vector<pdaValueType> Util::centralFromRawMoments(std::vector<pdaValueType>& rawMoments) {
+        std::vector<pdaValueType> centralMoments(rawMoments.size());
+        if (!rawMoments.empty())
+            centralMoments[0] = rawMoments[0];
+        if (rawMoments.size() >= 2) {
+            // Powers of 1st moment:
+            pdaValueType m1 = rawMoments[1];
+            pdaValueType m1_2 = m1 * m1;
+            pdaValueType m1_3 = m1_2 * m1;
+            pdaValueType m1_4 = m1_3 * m1;
+            // Resulting moments:
+            centralMoments[1] = rawMoments[1];
+            if (rawMoments.size() >= 3)
+                centralMoments[2] = rawMoments[2] - m1_2;
+            if (rawMoments.size() >= 4)
+                centralMoments[3] = rawMoments[3] - 3 * rawMoments[1] * rawMoments[2] + 2 * m1_3;
+            if (rawMoments.size() >= 5)
+                centralMoments[4] = rawMoments[4] - 4 * rawMoments[1] * rawMoments[3]
+                                    + 6 * rawMoments[1] * rawMoments[1] * rawMoments[2] - 3 * m1_4;
+        }
+        return centralMoments;
+    }
+
     /**
      * Monte Carlo simulation
      * @param x Argument
-     * @param aMoments Place for moments to return
      * @param function Function that is to simulate
      * @param nSampleNumber Number of samples
-     * @returns aMoments[2..4] The first central moments.
-     *          aMoments[0] is the 1st raw moment (mean).
-     * @note Assumes standard normal distributed Delta symbols.
+     * @param maxClock max seconds * CLOCKS_PER_SECOND
+     * @returns aMoments[0..4] The first raw moments.
      */
     std::vector<pdaValueType> Util::monteCarlo(PDV x,
                                                pdaValueType (*function)(pdaValueType argument),
-                                               size_t nSampleNumber) {
+                                               size_t nSampleNumber,
+                                               clock_t maxClocks) {
         assert(nSampleNumber != 0);
         PDA& pda = x.getPDA();
         size_t nNumberOfDeltas = x.getPDA().getNumberOfDeltas();
@@ -73,7 +95,8 @@ namespace Pda {
             aSums[j] = 0;
         // Loop over samples:
         size_t nRejected = 0;
-        for (size_t nSample = 0; nSample < nSampleNumber; ++nSample) {
+        clock_t startTime = clock();
+        for (size_t nSample = 0; nSample < nSampleNumber && clock()-startTime<=maxClocks; ++nSample) {
             // Generate random deltas:
             for (size_t i = 0; i < nNumberOfDeltas; ++i)
                 aDeltaValue[i] = pda.getDeltaDistribution(i)->drawSample() * sqrt(x.getPDA().getDeltaMoment(i, 2));
@@ -90,15 +113,8 @@ namespace Pda {
             } while (pi.next());
 
             // Calculate function:
-            pdaValueType result;
-            //std::cout << "argument=" << argument << std::endl;
+            pdaValueType result = (*function)(argument);
 
-            if (argument <= 0) {
-                ++nRejected;
-                continue;
-            }
-
-            result = (*function)(argument);
             // Consider result:
             aSums[0] += 1;
             aSums[1] += result;
@@ -110,45 +126,34 @@ namespace Pda {
         if (nRejected != 0)
             std::cout << nRejected << "samples rejected." << std::endl;
         auto nSamples = static_cast<pdaValueType>(nSampleNumber - nRejected);
-        pdaValueType aRawMoments[5];
+        std::vector<pdaValueType> aRawMoments(5);
         // Raw moments:
+        aRawMoments[0] = aSums[0] / nSamples;
         aRawMoments[1] = aSums[1] / nSamples;
         aRawMoments[2] = aSums[2] / nSamples;
         aRawMoments[3] = aSums[3] / nSamples;
         aRawMoments[4] = aSums[4] / nSamples;
-        // Powers of 1st moment:
-        pdaValueType m1 = aRawMoments[1];
-        pdaValueType m1_2 = m1 * m1;
-        pdaValueType m1_3 = m1_2 * m1;
-        pdaValueType m1_4 = m1_3 * m1;
-        // Resulting moments:
-        aMoments[0] = aRawMoments[1];
-        aMoments[1] = aRawMoments[1];
-        // Central moments:
-        aMoments[2] = aRawMoments[2] - m1_2;
-        aMoments[3] = aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * m1_3;
-        aMoments[4] = aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3]
-                      + 6 * aRawMoments[1] * aRawMoments[1] * aRawMoments[2] - 3 * m1_4;
-        return aMoments;
+        return aRawMoments;
     }
 
-/**
- * Monte Carlo Simulation
- * Performs a Monte Carlo Simulation of a given function which is
- * evaluated nominally.
- * Determins the first four moments of the resulting distribution.
- * The function can have an arbitrary number of arguments.
- * @param aArguments Vector of pointers to PDV arguments of the function
- * @param function Function that is to simulate (evaluated nominally)
- * @param nSampleNumber Number of samples
- * @returns aMoments[1..4] The first central moments.
- *          aMoments[0] is the 1st raw moment (mean).
- * @note Assumes standard normal distributed Delta symbols.
- */
+
+    /**
+     * Monte Carlo Simulation
+     * Performs a Monte Carlo Simulation of a given function which is
+     * evaluated nominally.
+     * Determins the first four raw moments of the resulting distribution.
+     * The function can have an arbitrary number of arguments.
+     * @param aArguments Vector of pointers to PDV arguments of the function
+     * @param function Function that is to simulate (evaluated nominally)
+     * @param nSampleNumber Number of samples
+     * @param maxClock max seconds * CLOCKS_PER_SECOND
+     * @returns aMoments[0..4] The first raw moments.
+     */
     std::vector<pdaValueType> Util::monteCarlo(
             const std::vector<PDV *> &aArguments,
             PDV (*function)(PDA &pda),
-            size_t nSampleNumber) {
+            size_t nSampleNumber,
+            clock_t maxClocks) {
         PDA &pda = aArguments[0]->getPDA();
         size_t nNumberOfDeltas = pda.getNumberOfDeltas();
         std::vector<pdaValueType> aDeltaValue(nNumberOfDeltas);
@@ -166,21 +171,13 @@ namespace Pda {
             aSums[i] = 0;
 
         // Loop over samples:
-        for (size_t nSample = 0; nSample < nSampleNumber; ++nSample) {
+        clock_t startTime = clock();
+        for (size_t nSample = 0; nSample < nSampleNumber && (clock()-startTime<=maxClocks); ++nSample) {
             // Generate random deltas:
             for (size_t i = 0; i < nNumberOfDeltas; ++i)
                 aDeltaValue[i] = pda.getDeltaDistribution(i)->drawSample(); //normalRand();
 
             // Generate arguments according to m_aCoeffs:
-#if false
-            for (size_t i=0; i<aArguments.size(); ++i)
-            {
-                pdaValueType argument = aOriginalNomValues[i];
-                for (size_t d=0; d<nNumberOfDeltas; ++d)
-                    argument += pda.getBinCoeff(d,1) * aDeltaValue[i];
-                aArguments[i]->setNom(argument);
-            }
-#else
             for (size_t i = 0; i < aArguments.size(); ++i) {
                 pdaValueType argument = aOriginalNomValues[i];
                 PowersIterator pi(pda, 1);
@@ -196,16 +193,13 @@ namespace Pda {
                     }
                 } while (pi.next());
                 aArguments[i]->setNom(argument);
-                //std::cout << "Argument #" << i << ": " << argument << endl;
             }
-#endif
 
             // Calculate function nominally:
             size_t oldOrder = pda.getOrder();
             pda.m_nOrder = 0; // Hack for performing nominal evaluation
             pdaValueType result = (*function)(pda).getNom();
             pda.m_nOrder = oldOrder;
-            //cout << "Result: " << result << endl;
 
             // Consider result:
             aSums[0] += 1;
@@ -220,26 +214,14 @@ namespace Pda {
             aArguments[i]->setNom(aOriginalNomValues[i]);
 
         auto nSampleNumberDivisor = static_cast<pdaValueType>(nSampleNumber);
-        pdaValueType aRawMoments[5];
+        std::vector<pdaValueType> aRawMoments(5);
         // Raw moments:
+        aRawMoments[0] = aSums[0] / nSampleNumberDivisor;
         aRawMoments[1] = aSums[1] / nSampleNumberDivisor;
         aRawMoments[2] = aSums[2] / nSampleNumberDivisor;
         aRawMoments[3] = aSums[3] / nSampleNumberDivisor;
         aRawMoments[4] = aSums[4] / nSampleNumberDivisor;
-        // Powers of 1st moment:
-        pdaValueType m1 = aRawMoments[1];
-        pdaValueType m1_2 = m1 * m1;
-        pdaValueType m1_3 = m1_2 * m1;
-        pdaValueType m1_4 = m1_3 * m1;
-        // Resulting moments:
-        aMoments[0] = aRawMoments[1];
-        aMoments[1] = aRawMoments[1];
-        // Central moments:
-        aMoments[2] = aRawMoments[2] - m1_2;
-        aMoments[3] = aRawMoments[3] - 3 * aRawMoments[1] * aRawMoments[2] + 2 * m1_3;
-        aMoments[4] = aRawMoments[4] - 4 * aRawMoments[1] * aRawMoments[3]
-                      + 6 * aRawMoments[1] * aRawMoments[1] * aRawMoments[2] - 3 * m1_4;
-        return aMoments;
+        return aRawMoments;
     }
 
 /**

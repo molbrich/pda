@@ -35,10 +35,7 @@ namespace Pda {
         struct DeltaDistribution;
         class PowersIterator;
         size_t getBinCoeff(size_t n, size_t k);
-        std::vector<pdaValueType> monteCarlo(
-                const std::vector<PDV*>& aArguments,
-                PDV (*function)(PDA& pda),
-                size_t nSampleNumber);
+        std::vector<pdaValueType> monteCarlo(const std::vector<PDV*>&, PDV (*function)(PDA& ), size_t, clock_t);
     }
 
     /**
@@ -111,10 +108,7 @@ namespace Pda {
 
         friend PDV;
         friend Util::PowersIterator;
-        friend std::vector<pdaValueType> Pda::Util::monteCarlo(
-                const std::vector<PDV*>& aArguments,
-                PDV (*function)(PDA& pda),
-                size_t nSampleNumber);
+        friend std::vector<pdaValueType> Pda::Util::monteCarlo(const std::vector<PDV*>&, PDV (*function)(PDA& ), size_t, clock_t);
     };
 
     /**
@@ -130,8 +124,6 @@ namespace Pda {
     size_t PDA::calcCoeffPos(const std::vector<size_t>& aPowers) const {
         size_t nPos = 0;
         size_t l = this->getOrder();
-        if (l == 0)
-            return nPos;
         size_t nDelta = this->getNumberOfDeltas();
         while (nDelta > 0) {
             --nDelta;

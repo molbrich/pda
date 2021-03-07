@@ -1008,8 +1008,11 @@ namespace Pda {
      * @returns Value of the raw moment
      */
     pdaValueType PDV::getRawMoment(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
+#if true
         if (nOrder == 0)
             return 1;
+        if (this->m_pda.getOrder() == 0)
+            return this->getRawMomentUnscaled(nOrder, method, nMax);
         pdaValueType factor = 0;
         size_t nonZeroCoefficientCount = 0;
         for (size_t i=0; i<this->m_pda.getNumberOfDeltas(); ++i) {
@@ -1034,6 +1037,9 @@ namespace Pda {
         }
 #endif
         return moment;
+#else
+        return this->getRawMomentUnscaled(nOrder, method, nMax);
+#endif
     }
 
     /**
@@ -1046,10 +1052,18 @@ namespace Pda {
     pdaValueType PDV::getRawMomentUnscaled(const size_t nOrder, const MomentMethod method, const size_t nMax) const {
         pdaValueType dMoment = 0;
         if (method == MomentMethod::Auto ||
-            method == MomentMethod::Full) {
+            method == MomentMethod::Full ||
+            method == MomentMethod::PowerLimit) {
             if (nOrder == 0)
                 return 1;
-            Util::PowersIterator pi(m_pda, nOrder, nOrder * m_pda.getOrder());
+            size_t nMaxTotalPowerSum = nOrder * m_pda.getOrder();
+            if (method == MomentMethod::PowerLimit)
+                nMaxTotalPowerSum = nMax;
+#if true
+            else if (method == MomentMethod::Auto)
+                nMaxTotalPowerSum = 2*nOrder;
+#endif
+            Util::PowersIterator pi(m_pda, nOrder, nMaxTotalPowerSum);
             do {
                 pdaValueType dAddend = 1;
                 std::vector<size_t>& aPositions = pi.getPositions();
@@ -1150,7 +1164,7 @@ namespace Pda {
     std::vector<pdaValueType> PDV::getRawMoments(const size_t nMaxOrder, const MomentMethod method, const size_t nMax) const {
         assert(nMaxOrder <= 4);
         std::vector<pdaValueType> aMoments(nMaxOrder+1);
-        if (method == MomentMethod::Full || method == MomentMethod::Auto)
+        if (method == MomentMethod::Full || method == MomentMethod::Auto || method == MomentMethod::PowerLimit)
             for (size_t nOrder = 0; nOrder <= nMaxOrder; ++nOrder) {
                 size_t nMaxTotalPowersSum = (nMax == 0 ? std::max(m_pda.getOrder() * nOrder, nOrder) : nMax);
                 aMoments[nOrder] = getRawMoment(nOrder, method, nMaxTotalPowersSum);
@@ -1294,10 +1308,9 @@ namespace Pda {
     /**
      * drawSamples
      * @param sampleCount
-     * @return
+     * @return Vector of sampleCount sorted random samples according to this PDV
      */
     std::vector<pdaValueType> PDV::drawSamples(size_t sampleCount) {
-        assert (m_pda.getOrder() > 0);
         std::vector<pdaValueType> r(sampleCount);
         std::vector<std::vector<pdaValueType>> deltaPowers(m_pda.getNumberOfDeltas(),
                                                            std::vector<pdaValueType>(m_pda.getOrder()+1));

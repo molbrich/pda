@@ -24,18 +24,18 @@
 namespace Pda {
     namespace Util {
         size_t getBinCoeff(size_t n, size_t k);
-        pdaValueType getNormQuantile(pdaValueType a);
-        pdaValueType getCFQuantile(pdaValueType a, std::vector<pdaValueType> aMoments);
+        std::vector<pdaValueType> centralFromRawMoments(std::vector<pdaValueType>&);
 
-        // Monte Carlo:
         std::vector<pdaValueType> monteCarlo(
                 PDV x,
                 pdaValueType (*function)(pdaValueType argument),
-                size_t nSampleNumber);
-        std::vector<pdaValueType> monteCarlo(
-                std::function<PDV(std::vector<PDV>)> function,
                 size_t nSampleNumber,
-                time_t maxTime);
+                clock_t maxClocks = 24*60*60*CLOCKS_PER_SEC);
+        std::vector<pdaValueType> monteCarlo(
+                const std::vector<PDV *> &aArguments,
+                PDV (*function)(PDA &pda),
+                size_t nSampleNumber,
+                clock_t maxClocks = 24*60*60*CLOCKS_PER_SEC);
 
         // Linear Equation Solver:
         void solve_LES_CG(const Matrix& A, Vector& x, const Vector& b);
