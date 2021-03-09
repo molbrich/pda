@@ -66,7 +66,7 @@ We can add arbitrary calculations with PDVs.
 Correlations between the variables are automatically preserved.
 And we can get the (estimated) moments of each variable afterwards.
 
-Please have a look at the hello-world.cpp program in examples/hello-world as an other running example.
+You can find this example in the folder examples/rc.
 
 ## Publications
 * M. Olbrich: Extended Probability Distribution Arithmetic. ICECOCS 2020. [DOI](https://doi.org/10.1109/ICECOCS50124.2020.9314534)
