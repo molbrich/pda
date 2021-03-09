@@ -1,34 +1,46 @@
-PDA     := ../../pda_lib
-LIBNAME := pda_deb
-#LIBNAME := pda
 PROG    := test
 
+PDA     := ../../pda_lib
+LIB_OPT := pda
+LIB_DEV := pda-dev
+
+default: $(PROG)
+all:     $(PROG) $(PROG)-opt
+
 CXX = g++
+
+CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic \
+	-Winit-self -Wold-style-cast -Wcast-qual -Wundef \
+	-Woverloaded-virtual \
+	-Wconversion \
+	-Wlogical-op \
+	-Wzero-as-null-pointer-constant 
 
 SANITIZE := -fsanitize=address \
 	-fsanitize=undefined \
 	-fsanitize=leak \
 	-fsanitize=float-cast-overflow \
 	-fno-omit-frame-pointer
+	
+CXXFLAGS_OPT := $(CXXFLAGS) -O3
+CXXFLAGS_DEV := $(CXXFLAGS) $(SANITIZE) -O0 -g 
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -g -O0 \
-	-Winit-self -Wold-style-cast -Wcast-qual -Wundef \
-	-Woverloaded-virtual \
-	-Wconversion \
-	-Wlogical-op \
-	-Wzero-as-null-pointer-constant \
-	$(SANITIZE)
+PDALIB_OPT  := $(PDA)/lib$(LIB_OPT).a
+PDALIB_DEV  := $(PDA)/lib$(LIB_DEV).a
 
-PDALIB	=$(PDA)/lib$(LIBNAME).a
+$(PROG)-opt: $(PROG).cpp $(PDALIB_OPT) makefile
+	$(CXX) $(CXXFLAGS_OPT) -I$(PDA) -L$(PDA) $< -o $@ -l$(LIB_OPT)
+$(PROG): $(PROG).cpp $(PDALIB_DEV) makefile
+	$(CXX) $(CXXFLAGS_DEV) -I$(PDA) -L$(PDA) $< -o $@ -l$(LIB_DEV)
 
-$(PROG): $(PROG).cpp $(PDALIB) makefile
-	$(CXX) $(CXXFLAGS) -I$(PDA) -L$(PDA) $< -o $@ -l$(LIBNAME)
+$(PDALIB_OPT):	
+	cd $(dir $@); make $(notdir $@)
+$(PDALIB_DEV):	
+	cd $(dir $@); make $(notdir $@)
 
-$(PDALIB):	
-	cd $(dir $(PDALIB)); make $(notdir $(PDALIB))
-
-clean:	makefile
+clean:
 	rm -f $(PROG)
+	rm -f $(PROG)-opt
 	rm -f *.o
 	rm -f *.a
 	rm -f -r html
@@ -36,4 +48,4 @@ clean:	makefile
 	rm -f *.stackdump
 	rm -f *.exe
 	rm -f core*
-	cd $(dir $(PDALIB)); make clean
+	cd $(PDA); make clean
