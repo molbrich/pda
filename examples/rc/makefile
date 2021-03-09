@@ -1,11 +1,11 @@
-PROG    := test
+PROG    := rc
 
 PDA     := ../../pda_lib
 LIB_OPT := pda
 LIB_DEV := pda-dev
 
 default: $(PROG)
-all:     $(PROG) $(PROG)-opt
+all:     $(PROG) $(PROG)-dev
 
 CXX = g++
 
@@ -22,15 +22,15 @@ SANITIZE := -fsanitize=address \
 	-fsanitize=float-cast-overflow \
 	-fno-omit-frame-pointer
 	
-CXXFLAGS_OPT := $(CXXFLAGS) -O3
+CXXFLAGS_OPT := $(CXXFLAGS) -D NDEBUG -O3
 CXXFLAGS_DEV := $(CXXFLAGS) $(SANITIZE) -O0 -g 
 
 PDALIB_OPT  := $(PDA)/lib$(LIB_OPT).a
 PDALIB_DEV  := $(PDA)/lib$(LIB_DEV).a
 
-$(PROG)-opt: $(PROG).cpp $(PDALIB_OPT) makefile
+$(PROG): $(PROG).cpp $(PDALIB_OPT) makefile
 	$(CXX) $(CXXFLAGS_OPT) -I$(PDA) -L$(PDA) $< -o $@ -l$(LIB_OPT)
-$(PROG): $(PROG).cpp $(PDALIB_DEV) makefile
+$(PROG)-dev: $(PROG).cpp $(PDALIB_DEV) makefile
 	$(CXX) $(CXXFLAGS_DEV) -I$(PDA) -L$(PDA) $< -o $@ -l$(LIB_DEV)
 
 $(PDALIB_OPT):	
@@ -40,7 +40,7 @@ $(PDALIB_DEV):
 
 clean:
 	rm -f $(PROG)
-	rm -f $(PROG)-opt
+	rm -f $(PROG)-dev
 	rm -f *.o
 	rm -f *.a
 	rm -f -r html
