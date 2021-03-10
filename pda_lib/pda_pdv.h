@@ -58,7 +58,7 @@ namespace Pda {
     public:
         // Constructors:
         PDV() = delete; // Default constructor not allowed
-        PDV(PDA& pda);
+        explicit PDV(PDA& pda);
         PDV(PDA& pda, pdaValueType nomValue);
         PDV(const PDV & P);
 
@@ -67,7 +67,7 @@ namespace Pda {
 
         // Compare two values for similarity
         static bool similar(pdaValueType, pdaValueType, pdaValueType = 1e-10);
-        bool similar(const PDV&, pdaValueType = 1e-14) const;
+        bool similar(const PDV&, pdaValueType = 1e-10) const;
         friend bool similar(const PDV&, const PDV&);
 
         PDA& getPDA() const { return m_pda; }
@@ -195,6 +195,7 @@ namespace Pda {
         // Debug:
         void check();
 
+        friend void check(const PDV& x, const PDV& y);
         friend void swap(PDV& a, PDV& b) { a.m_aCoeff.swap(b.m_aCoeff); };
     };
 
@@ -203,6 +204,9 @@ namespace Pda {
     pdaValueType Cov(const PDV& value1, const PDV& value2, MomentMethod method=MomentMethod::Auto, size_t nMax=0);
     pdaValueType Cor(const PDV& value1, const PDV& value2, MomentMethod method=MomentMethod::Auto, size_t nMax=0);
 
+    void check(const PDV& x, const PDV& y);
+
 } // end of namespace Pda
+
 
 #endif // PDA_PDV_H

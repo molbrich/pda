@@ -31,12 +31,12 @@ namespace Pda {
         Vector::Vector(PDA &pda, size_t size) :
                 m_pda(pda),
                 m_n(size),
-                m_e(m_n, pda) {}
+                m_e(m_n, PDV(pda)) {}
 
 /**
  * Gets size
  */
-        size_t Vector::getSize() {
+        size_t Vector::getSize() const {
             return m_n;
         }
 

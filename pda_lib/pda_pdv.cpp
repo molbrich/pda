@@ -107,10 +107,10 @@ namespace Pda {
      * @returns True if values are nearly equal
      */
     bool PDV::similar(pdaValueType value1, pdaValueType value2, pdaValueType epsilon) {
-        pdaValueType diff = fabs(value1 - value2);
+        pdaValueType diff = std::abs(value1 - value2);
         if (diff < 1e-20)
             return true;
-        pdaValueType sum = fabs(value1 + value2);
+        pdaValueType sum = std::abs(value1 + value2);
         if (sum < 1e-20)
             return true;
         if(diff / sum < epsilon)
@@ -124,6 +124,7 @@ namespace Pda {
      * @returns True if all coefficients are equal
      */
     bool PDV::similar(const PDV& x, const pdaValueType epsilon) const {
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             if (!PDV::similar(m_aCoeff[i], x.m_aCoeff[i])) {
                 if (fabs((m_aCoeff[i] - x.m_aCoeff[i]) / (m_aCoeff[i] + x.m_aCoeff[i])) < epsilon)
@@ -145,6 +146,7 @@ namespace Pda {
      * @returns True if *this.getNom()<x.getNom()
      */
     bool PDV::operator<(const PDV& x) const {
+        Pda::check(*this, x);
         return m_aCoeff[0] < x.m_aCoeff[0];
     }
 
@@ -180,9 +182,10 @@ namespace Pda {
      * @param x Right value
      * @returns True if all coefficients are equal
      */
-    bool PDV::operator==(const PDV &P) const {
+    bool PDV::operator==(const PDV &x) const {
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
-            if (!similar(m_aCoeff[i], P.m_aCoeff[i]))
+            if (!similar(m_aCoeff[i], x.m_aCoeff[i]))
                 return false;
         return true;
     }
@@ -193,6 +196,7 @@ namespace Pda {
      * @returns True if any coefficient is not equal
      */
     bool PDV::operator!=(const PDV& x) const {
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             if (!similar(m_aCoeff[i], x.m_aCoeff[i])) {
                 return true;
@@ -206,6 +210,7 @@ namespace Pda {
      * @returns *this
      */
     PDV& PDV::operator=(const PDV& x) {
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
             m_aCoeff[i] = x.m_aCoeff[i];
         return *this;
@@ -230,22 +235,26 @@ namespace Pda {
      * @returns x + y
      */
     PDV operator+(const PDV& x, const PDV& y) {
+        check(x, y);
         PDV temp(x.m_pda);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             temp.m_aCoeff[i] = x.m_aCoeff[i] + y.m_aCoeff[i];
         return temp;
     }
     PDV operator+(PDV&& x, const PDV& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             x.m_aCoeff[i] += y.m_aCoeff[i];
         return x;
     }
     PDV operator+(const PDV& x, PDV&& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             y.m_aCoeff[i] += x.m_aCoeff[i];
         return y;
     }
     PDV operator+(PDV&& x, PDV&& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             x.m_aCoeff[i] += y.m_aCoeff[i];
         return x;
@@ -285,12 +294,13 @@ namespace Pda {
 
     /**
      * Calculating assignment operator. [PDV] += [PDV]
-     * @param P Right value
+     * @param x Right value
      * @returns *this
      */
-    PDV& PDV::operator+=(const PDV& P) {
+    PDV& PDV::operator+=(const PDV& x) {
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
-            this->m_aCoeff[i] += P.m_aCoeff[i];
+            this->m_aCoeff[i] += x.m_aCoeff[i];
         return *this;
     }
 
@@ -332,22 +342,26 @@ namespace Pda {
      * @returns x - y
      */
     PDV operator-(const PDV& x, const PDV& y) {
+        check(x, y);
         PDV temp(x.m_pda);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             temp.m_aCoeff[i] = x.m_aCoeff[i] - y.m_aCoeff[i];
         return temp;
     }
     PDV operator-(PDV&& x, const PDV& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             x.m_aCoeff[i] -= y.m_aCoeff[i];
         return x;
     }
     PDV operator-(const PDV& x, PDV&& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             y.m_aCoeff[i] = x.m_aCoeff[i] - y.m_aCoeff[i];
         return y;
     }
     PDV operator-(PDV&& x, PDV&& y) {
+        check(x, y);
         for (size_t i = 0; i < x.m_pda.getNumberOfCoeffs(); ++i)
             x.m_aCoeff[i] -= y.m_aCoeff[i];
         return x;
@@ -386,9 +400,10 @@ namespace Pda {
     /**
      * Calculating assignment operator. [PDV] -= [PDV]
      */
-    PDV& PDV::operator-=(const PDV& P){
+    PDV& PDV::operator-=(const PDV& x){
+        Pda::check(*this, x);
         for (size_t i = 0; i < m_pda.getNumberOfCoeffs(); ++i)
-            m_aCoeff[i] -= P.m_aCoeff[i];
+            m_aCoeff[i] -= x.m_aCoeff[i];
         return *this;
     }
 
@@ -404,6 +419,7 @@ namespace Pda {
      * Operator [PDV] * [PDV]
      */
     PDV operator*(const PDV& x, const PDV& y) {
+        check(x, y);
         assert(&x.m_pda == &y.m_pda);
         PDV result(x.m_pda, 0);
         Util::PowersIterator pi(x.m_pda, 2, x.m_pda.getOrder()) ;
@@ -471,6 +487,7 @@ namespace Pda {
      * Operator [PDV] / [PDV]
      */
     PDV operator/(const PDV& x, const PDV& y) {
+        check(x, y);
         return x * inv(y);
     }
 
@@ -494,8 +511,9 @@ namespace Pda {
     /**
      * Calculating assignment operator. [PDV] /= [PDV]
      */
-    PDV& PDV::operator/=(const PDV& P) {
-        *this = *this / P;
+    PDV& PDV::operator/=(const PDV& x) {
+        Pda::check(*this, x);
+        *this = *this / x;
         return *this;
     }
 
@@ -512,11 +530,12 @@ namespace Pda {
 
     /**
      * Operator [PDV] ^ [PDV]
-     * @param P Right value
+     * @param x Right value
      * @returns (*this) ^ P
      */
-    PDV PDV::operator^(const PDV & P) const {
-        return exp(P * log(*this));
+    PDV PDV::operator^(const PDV & x) const {
+        Pda::check(*this, x);
+        return exp(x * log(*this));
     }
 
     /**
@@ -1462,6 +1481,17 @@ namespace Pda {
             assert(m_pda.calcCoeffPos(pi2.getFactorsPowersSum()) == pi2.getPosition());
             std::cout << "Pos:" << pi2.getPosition() << std::endl;
         } while (pi2.next());
+    }
+
+    void check(const PDV& x, const PDV& y) {
+#ifndef NDEBUG
+        if (&(x.m_pda) != &(y.m_pda))
+            throw std::runtime_error("PDV variables are not of same PDA");
+#else
+        // Suppress unused variable compiler warning:
+        (void)(x);
+        (void)(y);
+#endif
     }
 
 }

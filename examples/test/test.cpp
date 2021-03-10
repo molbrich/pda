@@ -113,6 +113,8 @@ void checkPowersIterator(Util::PowersIterator& pi, long nExpectedCombinationCoun
 }
 
 void testPowersIterator() {
+    std::cout << "Testing powers iterator" << std::endl;
+
     {
         PDA pda(0, 0);
         Util::PowersIterator pi(pda, 2);
@@ -167,6 +169,13 @@ void testPowersIterator() {
 }
 
 void testFundamentals() {
+	std::cout << "Testing fundamentals" << std::endl;
+	
+    assert(PDV::similar(1.0, 1.0));
+    assert(PDV::similar(1e-6, 1e-6));
+    assert(PDV::similar(1e-12, 1e-12));
+    assert(PDV::similar(1e-15, 1e-15));
+
     // Variable definition and init:
     {
         PDA pda(1,2);
@@ -190,6 +199,29 @@ void testFundamentals() {
         PDV a{pda,4};
         assert(a.getNom() == 4);
     }
+
+    {
+        PDA pda1(2, 3);
+        PDA pda2(1, 2);
+        PDV x1(pda1, 0);
+        PDV x2(pda2, 0);
+        PDV y1(pda1);
+#if true
+        try {
+            y1 = x2;
+        } catch (std::exception& error) {
+            //std::cout << error.what() << std::endl;
+        }
+        try {
+            y1 = x1 + x2;
+        } catch (std::exception& error) {
+            //std::cout << error.what() << std::endl;
+        }
+#else
+        y1 = x2;
+#endif
+    }
+
     for (size_t nOrder = 0; nOrder<=4; ++nOrder) {
         PDA pda(nOrder, 1);
         // Comparison
@@ -335,6 +367,8 @@ void testFundamentals() {
 }
 
 void testMaths() {
+	std::cout << "Testing maths" << std::endl;
+	
     const pdaValueType epsilon = 1E-9;
 
     // Unary first order operation:
@@ -475,6 +509,8 @@ void testMaths() {
 }
 
 void testMoments() {
+	std::cout << "Testing moment calculation" << std::endl;
+	
     const pdaValueType epsilon = 1E-9;
     {
         PDA pda(4,1);
@@ -687,6 +723,8 @@ void testMoments() {
 }
 
 void testCovariance() {
+	std::cout << "Testing covariance calculation" << std::endl;
+	
     const pdaValueType epsilon = 1E-9;
     for (size_t nOrder = 2; nOrder <= 4; ++nOrder) {
         PDA pda(nOrder, 3);
@@ -709,6 +747,8 @@ void testCovariance() {
 }
 
 void testSensitivity() {
+	std::cout << "Testing sensitivity calculation" << std::endl;
+	
     for (int nOrder = 1; nOrder <= 4; ++nOrder) {
         PDA pda(nOrder, 3);
 
@@ -738,6 +778,8 @@ void testSensitivity() {
 }
 
 void testEquationSystems() {
+	std::cout << "Testing equation solver" << std::endl;
+	
     // Vector, Matrics:
     {
         for (int nOrder = 1; nOrder <= 4; ++nOrder) {
@@ -862,31 +904,29 @@ void testEquationSystems() {
 }
 
 void testMonteCarloEstimations() {
+	std::cout << "Testing Monte Carlo" << std::endl;
+	
     for (int nOrder = 1; nOrder <= 4; ++nOrder) {
         PDA pda(nOrder, 3);
         PDV x(pda, 1);
         x.setDeltaCoeff(0, 0.1);
         x.setDeltaCoeff(1, 0.1);
         x.setDeltaCoeff(2, 0.1);
-        auto s = x.drawSamples();
-        auto cdf = x.estimatePDF();
-        auto pdf = x.estimatePDF();
+        auto s = x.drawSamples(20);
+        auto cdf = x.estimatePDF(10, 50);
+        auto pdf = x.estimatePDF(10, 50);
     }
 }
 
 void tests() {
-#if false
     testPowersIterator();
     testFundamentals();
     testMaths();
-#endif
     testMoments();
-#if false
     testCovariance();
     testSensitivity();
     testEquationSystems();
     testMonteCarloEstimations();
-#endif
 }
 
 int main () {

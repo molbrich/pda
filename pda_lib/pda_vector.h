@@ -36,7 +36,7 @@ namespace Pda {
         public:
             Vector(PDA &pda, size_t size);
             Vector(const Vector &v) = default;
-            size_t getSize();
+            size_t getSize() const;
             PDA &getPDA() const { return m_pda; }
             PDV const &operator[](size_t i) const;
             PDV &operator[](size_t i);

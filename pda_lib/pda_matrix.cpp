@@ -30,7 +30,7 @@ namespace Pda {
         Matrix::Matrix(PDA &pda, size_t size) :
                 m_pda{pda},
                 m_n{size},
-                m_e{size, std::vector<PDV>{size, pda}} {}
+                m_e{size, std::vector<PDV>{size, PDV(pda)}} {}
 
         /**
          * Copy constructor
@@ -38,7 +38,7 @@ namespace Pda {
         Matrix::Matrix(const Util::Matrix &M) :
                 m_pda{M.m_pda},
                 m_n(M.m_n),
-                m_e(m_n, std::vector<PDV>{m_n, m_pda}) {
+                m_e(m_n, std::vector<PDV>{m_n, PDV(m_pda)}) {
             for (size_t i = 0; i < m_n; ++i)
                 m_e[i] = M.m_e[i];
         }
