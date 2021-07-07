@@ -33,16 +33,13 @@ namespace Pda {
                                      + ". Order must be between 0 and 4.");
 
         // Fill helper array m_aBinCoeffs:
-        m_nMaxBinCoeffN = m_nNumberOfDeltas + 9;
-        m_nMaxBinCoeffK = 8;
-        m_aBinCoeffs.resize(m_nMaxBinCoeffN + 1, std::vector<size_t>(m_nMaxBinCoeffK + 1));
-        for (size_t n = 0; n <= m_nMaxBinCoeffN; ++n) {
-            m_aBinCoeffs[n][0] = 1;
-            for (size_t k = 1; k <= m_nMaxBinCoeffK; ++k) {
-                if (k > n) continue;
-                if (k == n) m_aBinCoeffs[n][k] = 1;
-                else m_aBinCoeffs[n][k] = m_aBinCoeffs[n - 1][k] + m_aBinCoeffs[n - 1][k - 1];
-            }
+        m_nMaxBinCoeffN = m_nNumberOfDeltas + m_nOrder;
+        m_nMaxBinCoeffK = m_nOrder;
+        m_aBinCoeffs.reserve(m_nMaxBinCoeffN + 1);
+        for (size_t n = 0; n < m_nMaxBinCoeffN + 1; ++n) {
+            m_aBinCoeffs.emplace_back(std::min(n + 1, m_nMaxBinCoeffK + 1), 1);
+            for (size_t k = 1; k < std::min(n, m_nMaxBinCoeffK + 1); ++k)
+                m_aBinCoeffs[n][k] = m_aBinCoeffs[n - 1][k] + m_aBinCoeffs[n - 1][k - 1];
         }
 
         // m_nNumberOfCoeffs

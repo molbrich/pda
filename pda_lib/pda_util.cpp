@@ -151,10 +151,11 @@ namespace Pda {
      */
     std::vector<pdaValueType> Util::monteCarlo(
             const std::vector<PDV *> &aArguments,
-            PDV (*function)(PDA &pda),
+            std::function<PDV(PDA&)> function,
             size_t nSampleNumber,
             clock_t maxClocks) {
-        PDA &pda = aArguments[0]->getPDA();
+        assert(!aArguments.empty());
+        PDA& pda = (*aArguments[0]).getPDA();
         size_t nNumberOfDeltas = pda.getNumberOfDeltas();
         std::vector<pdaValueType> aDeltaValue(nNumberOfDeltas);
         std::vector<pdaValueType> aSums(5);
@@ -172,10 +173,11 @@ namespace Pda {
 
         // Loop over samples:
         clock_t startTime = clock();
-        for (size_t nSample = 0; nSample < nSampleNumber && (clock()-startTime<=maxClocks); ++nSample) {
+        size_t nSample;
+        for (nSample = 0; nSample < nSampleNumber && (clock()-startTime<=maxClocks); ++nSample) {
             // Generate random deltas:
             for (size_t i = 0; i < nNumberOfDeltas; ++i)
-                aDeltaValue[i] = pda.getDeltaDistribution(i)->drawSample(); //normalRand();
+                aDeltaValue[i] = pda.getDeltaDistribution(i)->drawSample();
 
             // Generate arguments according to m_aCoeffs:
             for (size_t i = 0; i < aArguments.size(); ++i) {
@@ -189,7 +191,7 @@ namespace Pda {
                             for (size_t nPower = 0; nPower < factorsPowersSum[nDelta]; ++nPower)
                                 factor *= aDeltaValue[nDelta];
                         }
-                        argument += aArguments[i]->getCoeff(pi.getFactorsPowersSum()) * factor;
+                        argument += aArguments[i]->getCoeff(factorsPowersSum) * factor;
                     }
                 } while (pi.next());
                 aArguments[i]->setNom(argument);
@@ -198,7 +200,7 @@ namespace Pda {
             // Calculate function nominally:
             size_t oldOrder = pda.getOrder();
             pda.m_nOrder = 0; // Hack for performing nominal evaluation
-            pdaValueType result = (*function)(pda).getNom();
+            pdaValueType result = function(pda).getNom();
             pda.m_nOrder = oldOrder;
 
             // Consider result:
@@ -213,7 +215,7 @@ namespace Pda {
         for (size_t i = 0; i < aArguments.size(); ++i)
             aArguments[i]->setNom(aOriginalNomValues[i]);
 
-        auto nSampleNumberDivisor = static_cast<pdaValueType>(nSampleNumber);
+        auto nSampleNumberDivisor = static_cast<pdaValueType>(nSample);
         std::vector<pdaValueType> aRawMoments(5);
         // Raw moments:
         aRawMoments[0] = aSums[0] / nSampleNumberDivisor;
@@ -464,8 +466,8 @@ namespace Pda {
  */
     std::pair<size_t, bool> Util::newton_raphson(Vector &x,
                                                  void (*load)(const Vector &x,
-                                           Vector &f,
-                                           Matrix &J),
+                                                 Vector &f,
+                                                 Matrix &J),
                                                  size_t nMaxIterations) {
         size_t n = x.getSize();
         PDA &pda = x.getPDA();

@@ -19,7 +19,7 @@
 #include "pda_pdv.h"
 #include "pda_powersiterator.h"
 #include "pda_matrix.h"
-//#include <array>
+#include <functional>
 
 namespace Pda {
     namespace Util {
@@ -33,7 +33,7 @@ namespace Pda {
                 clock_t maxClocks = 24*60*60*CLOCKS_PER_SEC);
         std::vector<pdaValueType> monteCarlo(
                 const std::vector<PDV *> &aArguments,
-                PDV (*function)(PDA &pda),
+                std::function<PDV(PDA&)> function,
                 size_t nSampleNumber,
                 clock_t maxClocks = 24*60*60*CLOCKS_PER_SEC);
 
@@ -46,9 +46,10 @@ namespace Pda {
         Matrix inv_GE(Matrix& A_in); // @warning Under construction
 
         // Nonlinear Equation Solver
-        std::pair<size_t, bool> newton_raphson(Vector & x, void (*load)(const Vector& x,
-                                                                        Vector & f,
-                                                                        Matrix& J),
+        std::pair<size_t, bool> newton_raphson(Vector & x, 
+                                               void (*load)(const Vector& x,
+                                                   Vector & f,
+                                                   Matrix& J),
                                                size_t nMaxIteration = 60);
     }
 }

@@ -48,15 +48,17 @@ namespace Pda {
             dDivisor *= static_cast<pdaValueType>(nTerm);
             Util::PowersIterator pi(m_pda, nTerm, m_pda.getOrder());
             do {
-                dProduct = 1;
-                std::vector<size_t>& aPositions = pi.getPositions();
-                for (size_t nFactor = 0; nFactor < nTerm; ++nFactor)
-                    if (aPositions[nFactor] == 0) {
-                        dProduct = 0;
-                        break;
-                    }
-                    else dProduct *= m_aCoeff[aPositions[nFactor]];
-                result.m_aCoeff[pi.getPosition()] += aDerivatives[nTerm] / dDivisor * dProduct;
+                [&]() {
+                    dProduct = 1;
+                    std::vector<size_t>& aPositions = pi.getPositions();
+                    for (size_t nFactor = 0; nFactor < nTerm; ++nFactor)
+                        if (aPositions[nFactor] == 0 || m_aCoeff[aPositions[nFactor]] == 0.0) {
+                            dProduct = 0;
+                            return;
+                        }
+                        else dProduct *= m_aCoeff[aPositions[nFactor]];
+                    result.m_aCoeff[pi.getPosition()] += aDerivatives[nTerm] / dDivisor * dProduct;
+                }();
             } while (pi.next());
         }
         return result;

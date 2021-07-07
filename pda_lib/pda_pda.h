@@ -23,6 +23,7 @@
 #include <random>
 #include <cassert>
 #include <bits/unique_ptr.h>
+#include <functional>
 
 namespace Pda {
 
@@ -35,7 +36,9 @@ namespace Pda {
         struct DeltaDistribution;
         class PowersIterator;
         size_t getBinCoeff(size_t n, size_t k);
-        std::vector<pdaValueType> monteCarlo(const std::vector<PDV*>&, PDV (*function)(PDA& ), size_t, clock_t);
+        std::vector<pdaValueType> monteCarlo(const std::vector<PDV*>&, 
+            std::function<PDV(PDA&)> function,
+            size_t, clock_t);
     }
 
     /**
@@ -108,7 +111,7 @@ namespace Pda {
 
         friend PDV;
         friend Util::PowersIterator;
-        friend std::vector<pdaValueType> Pda::Util::monteCarlo(const std::vector<PDV*>&, PDV (*function)(PDA& ), size_t, clock_t);
+        friend std::vector<pdaValueType> Pda::Util::monteCarlo(const std::vector<PDV*>&, std::function<PDV(PDA&)> function, size_t, clock_t);
     };
 
     /**

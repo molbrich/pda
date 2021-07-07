@@ -60,7 +60,7 @@ namespace Pda {
         PDV() = delete; // Default constructor not allowed
         explicit PDV(PDA& pda);
         PDV(PDA& pda, pdaValueType nomValue);
-        PDV(const PDV & P);
+        PDV(const PDV& P);
 
         // Destructor
         ~PDV();
