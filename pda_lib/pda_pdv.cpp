@@ -896,12 +896,8 @@ namespace Pda {
                             pdaValueType factor){
         assert(nDeltaNumber < m_pda.getNumberOfDeltas());
         if (m_pda.getOrder() == 0) return;
-        assert(nDeltaNumber < m_pda.getNumberOfDeltas());
-        std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
-        for (size_t i = 0; i < m_pda.getNumberOfDeltas(); ++i)
-            aPowers[i] = 0;
-        aPowers[nDeltaNumber] = 1;
-        setCoeff(aPowers, factor);
+        const size_t coeffIndex = m_pda.getBinCoeff(nDeltaNumber + m_pda.getOrder(), m_pda.getOrder());
+        m_aCoeff[coeffIndex] = factor;
     }
 
     /**
@@ -912,12 +908,8 @@ namespace Pda {
      */
     pdaValueType PDV::getDeltaCoeff(size_t nDeltaNumber) const {
         assert(nDeltaNumber < m_pda.getNumberOfDeltas());
-        std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
-        for (size_t i = 0; i < m_pda.getNumberOfDeltas(); ++i)
-            aPowers[i] = 0;
-        aPowers[nDeltaNumber] = 1;
-        pdaValueType r = getCoeff(aPowers);
-        return r;
+        const size_t coeffIndex = m_pda.getBinCoeff(nDeltaNumber + m_pda.getOrder(), m_pda.getOrder());
+        return m_aCoeff[coeffIndex];
     }
 
     /**
@@ -1318,11 +1310,8 @@ namespace Pda {
      * @returns Sensitivity value
      */
     pdaValueType PDV::getSensitivity(const size_t nDeltaNumber){
-        std::vector<size_t> aPowers(m_pda.getNumberOfDeltas());
-        for (size_t i = 0; i < m_pda.getNumberOfDeltas(); ++i)
-            if (i == nDeltaNumber) aPowers[i] = 1;
-            else aPowers[i] = 0;
-        pdaValueType sensitivity = m_aCoeff[m_pda.calcCoeffPos(aPowers)];
+        const size_t coeffIndex = m_pda.getBinCoeff(nDeltaNumber + m_pda.getOrder(), m_pda.getOrder());
+        const pdaValueType sensitivity = m_aCoeff[coeffIndex];
         return sensitivity;
     }
 
