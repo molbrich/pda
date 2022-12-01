@@ -74,7 +74,7 @@ namespace Pda {
         size_t m_nNumberOfPDVInstances;
 
         /**
-         * Helper array of binomeal coefficients
+         * Helper array of binomial coefficients
          * n over k is m_aBinCoeffs[n][k];
          */
         size_t m_nMaxBinCoeffN;
@@ -83,6 +83,13 @@ namespace Pda {
 
         /** Number of coefficients of each PDV value */
         size_t m_nNumberOfCoeffs;
+
+        /**
+         * Helper array for coefficient index calculation
+         */
+        size_t m_nSizeInner;
+        size_t m_nSizeOuter;
+        std::vector<size_t> m_aCoeffIndexingData;
 
         /** Delta distributions */
         std::vector<std::unique_ptr<Util::DeltaDistribution>> m_deltaDistributions;
@@ -125,18 +132,18 @@ namespace Pda {
      * @return Corresponding index inside m_aCoeff
      */
     size_t PDA::calcCoeffPos(const std::vector<size_t>& aPowers) const {
-        size_t nPos = 0;
-        size_t l = this->getOrder();
-        size_t nDelta = this->getNumberOfDeltas();
-        while (nDelta > 0) {
-            --nDelta;
-            for (size_t m = 0; m < aPowers[nDelta]; ++m) {
-                nPos += this->getBinCoeff(nDelta + l, l);
-                assert(l>0);
-                    --l;
-            }
+        size_t i = 0;
+        size_t deltaWgt = this->m_nOrder;
+        size_t deltaIdx = this->m_nNumberOfDeltas;
+        for (auto rDeltaPowIter = aPowers.crbegin(); rDeltaPowIter != aPowers.crend(); ++rDeltaPowIter) {
+            const size_t& deltaPow = *rDeltaPowIter;
+            i += this->m_aCoeffIndexingData[--deltaIdx * this->m_nSizeOuter + deltaWgt * this->m_nSizeInner + deltaPow];
+            assert(deltaWgt >= deltaPow);
+            if (deltaWgt == deltaPow)
+                return i;
+            deltaWgt -= deltaPow;
         }
-        return nPos;
+        return i;
     }
 
     namespace Util {

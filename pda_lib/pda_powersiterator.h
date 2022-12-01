@@ -42,6 +42,7 @@ namespace Pda {
             /** Delta powers.
              * m_aaPowers[nFactor][nDelta] */
             std::vector<std::vector<size_t>> m_aaPowers;
+            std::vector<size_t> m_aTemp;
 
             /** Array of m_nNumberOfDeltas power sums in dependence of delta index.
              * aFactorsPowersSums[nDelta] is the sum of the powers of delta nDelta in all factors.
@@ -72,19 +73,131 @@ namespace Pda {
         public:
             PowersIterator(const PDA &pda, size_t nNumberOfFactors, size_t nMaxTotalPowersSum = 0);
 
-            bool next();
-            const PDA &getPDA() { return m_pda; };
-            size_t getPosition() const;
-            std::vector<size_t> &getPositions();
-            std::vector<size_t> &getFactorDeltasPowers(size_t nFactor);
-            std::vector<size_t> &getFactorsPowersSum();
-            std::vector<size_t> &getDeltasPowersSums();
+            inline bool next();
+            const PDA &getPDA() const { return m_pda; }
+            inline size_t getPosition();
+            inline const std::vector<size_t>& getPositions() const;
+            inline std::vector<size_t> getFactorDeltasPowers(size_t nFactor) const;
+            inline const std::vector<size_t>& getFactorsPowersSum() const;
+            inline const std::vector<size_t>& getDeltasPowersSums() const;
 
-            size_t getTotelPowersSum() const { return m_nTotalPowersSum; };
-            size_t getNumberOfFactors() const { return m_nNumberOfFactors; };
-            size_t getMaxTotalPowersSum() const { return m_nMaxTotalPowersSum; };
-            void dump() const;
+            size_t getTotelPowersSum() const { return m_nTotalPowersSum; }
+            size_t getNumberOfFactors() const { return m_nNumberOfFactors; }
+            size_t getMaxTotalPowersSum() const { return m_nMaxTotalPowersSum; }
+
+            friend std::ostream& operator<<(std::ostream&, const PowersIterator&);
+            void dump(std::ostream&) const;
         };
+
+        /**
+         * Returns the coefficient position of the result
+         * @returns Position
+         */
+        size_t PowersIterator::getPosition() {
+            assert(m_nTotalPowersSum <= m_pda.getOrder());
+            m_aTemp.clear();
+            for(const auto& aPowerIndices : m_aaPowers)
+                for(const size_t& deltaIdx : aPowerIndices)
+                    m_aTemp.emplace(std::upper_bound(m_aTemp.begin(), m_aTemp.end(), deltaIdx, std::greater<>()),
+                                    deltaIdx);
+            size_t i = 0;
+            size_t deltaWeight = m_pda.m_nOrder;
+            for (const size_t& deltaIdx : m_aTemp)
+            {
+                i += m_pda.getBinCoeff(deltaIdx + deltaWeight, deltaWeight);
+                --deltaWeight;
+            }
+            return i;
+        }
+
+        /**
+         * Returns an array of nNumberOfFactors coefficient positions.
+         * @returns Position array
+         */
+        const std::vector<size_t>& PowersIterator::getPositions() const {
+            return m_aPositions;
+        }
+
+        /**
+         * Returns an array of nNumberOfDeltas power sums.
+         * @see PowersIterator::m_aFactorsPowersSums
+         * @returns Power sum array
+         */
+        const std::vector<size_t>& PowersIterator::getFactorsPowersSum() const {
+            return m_aFactorsPowersSums;
+        }
+
+        /**
+         * Returns an array of nNumberOfDeltas delta powers for a given factor.
+         * Costly method which should only be used for debug purposes.
+         * @param nFactor Factor number
+         * @returns Delta power array
+         */
+        std::vector<size_t> PowersIterator::getFactorDeltasPowers(size_t nFactor) const {
+            std::vector<size_t> aPowers(m_pda.getNumberOfDeltas(), 0);
+            for (const size_t& nDelta : m_aaPowers[nFactor])
+                ++aPowers[nDelta];
+            return aPowers;
+        }
+
+        /**
+         * Returns an array of nNumberOfFactors power sums.
+         * @returns Power sum array
+         */
+        const std::vector<size_t>& PowersIterator::getDeltasPowersSums() const {
+            return m_aDeltasPowersSums;
+        }
+
+        /**
+         * Go to next combination.
+         */
+        bool PowersIterator::next() {
+            for (size_t factorIdx = 0; factorIdx < m_nNumberOfFactors; ++factorIdx) {
+                std::vector<size_t>& factorPowerIndices = m_aaPowers[factorIdx];
+                for (auto powIdxIt = factorPowerIndices.begin(); powIdxIt < factorPowerIndices.end(); ++powIdxIt) {
+                    const size_t nextDeltaIndex = *powIdxIt + 1;
+                    if (nextDeltaIndex < m_pda.getNumberOfDeltas()) {
+                        size_t deltaPowWgt = m_pda.getOrder();
+                        for (auto powIdxIt2 = factorPowerIndices.begin(); powIdxIt2 <= powIdxIt; ++powIdxIt2) {
+                            m_aPositions[factorIdx] -= m_pda.getBinCoeff(*powIdxIt2 + deltaPowWgt, deltaPowWgt);
+                            m_aPositions[factorIdx] += m_pda.getBinCoeff(nextDeltaIndex + deltaPowWgt, deltaPowWgt);
+
+                            --m_aFactorsPowersSums[*powIdxIt2];
+                            ++m_aFactorsPowersSums[nextDeltaIndex];
+
+                            *powIdxIt2 = nextDeltaIndex;
+
+                            --deltaPowWgt;
+                        }
+
+                        return true;
+                    }
+                }
+                if (factorPowerIndices.size() < m_pda.getOrder() && m_nTotalPowersSum < m_nMaxTotalPowersSum) {
+                    m_aFactorsPowersSums.back() -= factorPowerIndices.size();
+
+                    std::fill(factorPowerIndices.begin(), factorPowerIndices.end(), 0);
+                    factorPowerIndices.push_back(0);
+
+                    m_aFactorsPowersSums[0] += factorPowerIndices.size();
+                    m_aPositions[factorIdx] = factorPowerIndices.size();
+
+                    ++m_aDeltasPowersSums[factorIdx];
+                    ++m_nTotalPowersSum;
+
+                    return true;
+                } else {
+                    m_aFactorsPowersSums.back() -= factorPowerIndices.size();
+                    m_nTotalPowersSum -= factorPowerIndices.size();
+
+                    factorPowerIndices.clear();
+
+                    m_aDeltasPowersSums[factorIdx] = 0;
+                    m_aPositions[factorIdx] = 0;
+                }
+            }
+            return false;
+        }
     }
 }
 #endif

@@ -50,7 +50,7 @@ namespace Pda {
             do {
                 [&]() {
                     dProduct = 1;
-                    std::vector<size_t>& aPositions = pi.getPositions();
+                    const std::vector<size_t>& aPositions = pi.getPositions();
                     for (size_t nFactor = 0; nFactor < nTerm; ++nFactor)
                         if (aPositions[nFactor] == 0 || m_aCoeff[aPositions[nFactor]] == 0.0) {
                             dProduct = 0;
@@ -1079,12 +1079,12 @@ namespace Pda {
             Util::PowersIterator pi(m_pda, nOrder, nMaxTotalPowerSum);
             do {
                 pdaValueType dAddend = 1;
-                std::vector<size_t>& aPositions = pi.getPositions();
+                const std::vector<size_t>& aPositions = pi.getPositions();
                 for (size_t nFactor = 0; nFactor < nOrder; ++nFactor) {
                     dAddend *= m_aCoeff[aPositions[nFactor]];
                 }
                 if (similar(dAddend, 0)) continue;
-                std::vector<size_t>& aFactorsPowersSum = pi.getFactorsPowersSum();
+                const std::vector<size_t>& aFactorsPowersSum = pi.getFactorsPowersSum();
                 for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
                     dAddend *= m_pda.getDeltaMoment(nDelta, aFactorsPowersSum[nDelta]);
                 }
@@ -1114,7 +1114,7 @@ namespace Pda {
             do {
                 dAddend = m_aCoeff[pi.getPositions()[0]];
                 if (similar(dAddend, 0)) continue;
-                std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
+                const std::vector<size_t> &aFactorsPowersSum = pi.getFactorsPowersSum();
                 for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
                     if (aFactorsPowersSum[nDelta] > nMaxDeltaPower) {
                         dAddend = 0;
@@ -1201,7 +1201,7 @@ namespace Pda {
                 do {
                     dAddend = m_aCoeff[pi.getPositions()[0]];
                     if (similar(dAddend, 0)) continue;
-                    std::vector<size_t>& aTotalPowers = pi.getFactorsPowersSum();
+                    const std::vector<size_t>& aTotalPowers = pi.getFactorsPowersSum();
                     for (size_t nDelta = 0; nDelta < m_pda.getNumberOfDeltas(); ++nDelta) {
                         if (aTotalPowers[nDelta] > m_pda.getOrder()) {
                             dAddend = 0;
@@ -1446,15 +1446,27 @@ namespace Pda {
     }
 
     /**
-     * Sets small coefficient to zero
+     * Sets small coefficients to zero
      */
     void PDV::clean() {
         static const pdaValueType epsilon = 1e-14;
         Util::PowersIterator pi(m_pda, 1);
-        do{
-            if (fabs(m_aCoeff[pi.getPosition()]) < epsilon)
-                m_aCoeff[pi.getPosition()] = 0;
-        } while (pi.next());
+        for (pdaValueType& c: this->m_aCoeff)
+            if (fabs(c) < epsilon)
+                c = 0;
+    }
+
+    /**
+     * Random number
+     */
+    PDV rand(PDA& pda) {
+        static std::random_device rd; // obtain a random number from hardware
+        static std::mt19937 gen(rd()); // seed the generator
+        static std::uniform_real_distribution<pdaValueType> dist(0, 1); // define the range
+        PDV result(pda);
+        for (pdaValueType& c: result.m_aCoeff)
+            c = dist(gen);
+        return result;
     }
 
     /**

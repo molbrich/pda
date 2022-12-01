@@ -25,6 +25,9 @@ namespace Pda {
             m_nNumberOfDeltas(numberOfDeltas),
             m_nOrder(order),
             m_nNumberOfPDVInstances(0),
+            m_nSizeInner(order + 1),
+            m_nSizeOuter(m_nSizeInner * m_nSizeInner),
+            m_aCoeffIndexingData(numberOfDeltas * m_nSizeOuter),
             m_deltaDistributions(numberOfDeltas),
             m_deltaNames(numberOfDeltas) {
         if (order > 4)
@@ -44,6 +47,21 @@ namespace Pda {
 
         // m_nNumberOfCoeffs
         m_nNumberOfCoeffs = getBinCoeff(m_nNumberOfDeltas + m_nOrder, m_nOrder);
+
+        // Fill helper array m_aCoeffIndexingData:
+        for (size_t i = 0; i < this->getNumberOfDeltas(); ++i) { // nDelta
+            for (size_t j = 1; j <= this->getOrder(); ++j) {     // l
+                for (size_t k = 1; k <= j; ++k) {                // aPowers[nDelta]
+                    size_t l = j;
+                    size_t nPos = 0;
+                    for(size_t m = 0; m < k; ++m) {
+                        nPos += this->getBinCoeff(i + l, l);
+                        --l;
+                    }
+                    m_aCoeffIndexingData[i * this->m_nSizeOuter + j * this->m_nSizeInner + k] = nPos;
+                }
+            }
+        }
 
         // Init Delta moments:
         //m_aDeltaMoments.resize(m_nNumberOfDeltas * (m_nMaxMoment + 1));

@@ -195,6 +195,7 @@ namespace Pda {
         // Debug:
         void check();
 
+        friend PDV rand(PDA& pda);
         friend void check(const PDV& x, const PDV& y);
         friend void swap(PDV& a, PDV& b) { a.m_aCoeff.swap(b.m_aCoeff); };
     };
@@ -203,6 +204,8 @@ namespace Pda {
     pdaValueType Var(const PDV& value, MomentMethod method=MomentMethod::Auto, size_t nMax=0);
     pdaValueType Cov(const PDV& value1, const PDV& value2, MomentMethod method=MomentMethod::Auto, size_t nMax=0);
     pdaValueType Cor(const PDV& value1, const PDV& value2, MomentMethod method=MomentMethod::Auto, size_t nMax=0);
+
+    PDV rand(PDA& pda);
 
     void check(const PDV& x, const PDV& y);
 

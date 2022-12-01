@@ -481,7 +481,7 @@ namespace Pda {
             (*load)(x, r, J);
             bool success = solve_LES_LU(J, dx, r);
             if (!success)
-                return std::make_pair(i, false);
+                return std::make_pair(i + 1, false);
             xNeu = x - dx;
             size_t j;
             for (j = 0; j < n; ++j)
@@ -489,11 +489,11 @@ namespace Pda {
                     break;
                 }
             if (j == n) {
-                break;
+                return std::make_pair(i + 1, true);
             }
             x = xNeu;
         }
-        return std::make_pair(i, i != nMaxIterations);
+        return std::make_pair(std::min(i + 1, nMaxIterations), i != nMaxIterations);
     }
 
 }
